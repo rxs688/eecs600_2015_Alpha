@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(cwru_pcl_utils)
+project(eecs600_rahul_pcl_utils)
 
 find_package(catkin_simple REQUIRED)
 find_package(cmake_modules REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(PCL 1.7 REQUIRED)
+find_package(cwru_pcl_utils REQUIRED)
 find_package(baxter_cartesian_moves)
 include_directories(${EIGEN3_INCLUDE_DIR})
+include_directories(${cwru_pcl_utils_INCLUDE_DIR})
 add_definitions(${EIGEN_DEFINITIONS})
 
 catkin_simple()
@@ -19,15 +21,13 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 
 # Libraries
 # cs_add_library(my_lib src/my_lib.cpp)   
-cs_add_library(cwru_pcl_utils src/cwru_pcl_utils.cpp)  
+#cs_add_library(cwru_pcl_utils src/cwru_pcl_utils.cpp)  
 
 # Executables
 # cs_add_executable(example src/example.cpp)
 # target_link_library(example my_lib)
-cs_add_executable(cwru_pcl_utils_example_main src/cwru_pcl_utils_example_main.cpp)
-cs_add_executable(ps8_eecs600 src/ps8_eecs600_baxter_cart_move_lib.cpp src/ps8_eecs_600_rahul.cpp)
-target_link_libraries(cwru_pcl_utils_example_main cwru_pcl_utils ${catkin_LIBRARIES})
-target_link_libraries(ps8_eecs600 cwru_pcl_utils cart_path_planner_lib ${catkin_LIBRARIES})
+cs_add_executable(eecs600Alpha src/baxter_cart_move_lib.cpp src/eecs_600_rahul.cpp)
+target_link_libraries(eecs600Alpha cwru_pcl_utils cart_path_planner_lib ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()

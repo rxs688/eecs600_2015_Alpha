@@ -1,5 +1,5 @@
 
-#include <cwru_pcl_utils/ps8_eecs600_baxter_cart_move_lib.h>
+#include <eecs600_alpha_pcl_utils/baxter_cart_move_lib.h>
 
 // constructor
 ArmMotionCommander::ArmMotionCommander(ros::NodeHandle* nodehandle): nh_(*nodehandle),cart_move_action_client_("cartMoveActionServer", true)                                   

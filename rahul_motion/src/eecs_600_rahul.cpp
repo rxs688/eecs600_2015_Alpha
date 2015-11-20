@@ -1,12 +1,9 @@
-
-
-#include <cwru_pcl_utils/cwru_pcl_utils.h>
+#include <eecs600_alpha_pcl_utils/cwru_pcl_utils.h>
 #include <baxter_core_msgs/JointCommand.h>
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
-//#include <baxter_traj_streamer/baxter_traj_streamer.h>
 #include <cwru_action/trajAction.h>
-#include <cwru_pcl_utils/ps8_eecs600_baxter_cart_move_lib.h>
+#include <eecs600_alpha_pcl_utils/baxter_cart_move_lib.h>
 
 using namespace std;
 
