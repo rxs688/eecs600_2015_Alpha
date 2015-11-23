@@ -13,8 +13,10 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	pcl::PointXYZRGB seedpoint;
 	int bcount = 0;
 	
-	for(int i = 0; i < npts; i++){
-		if(inputCloud->points[i].z > max_z){
+	for(int i = 0; i < npts; i++)
+        {
+		if(inputCloud->points[i].z > max_z)
+                {
 			seedpoint = inputCloud->points[i];
 			max_z = seedpoint.z;
 		}

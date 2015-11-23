@@ -1,9 +1,11 @@
-#include <eecs600_alpha_pcl_utils/cwru_pcl_utils.h>
+
+#include <cwru_pcl_utils/cwru_pcl_utils.h>
 #include <baxter_core_msgs/JointCommand.h>
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
 #include <cwru_action/trajAction.h>
 #include <eecs600_alpha_pcl_utils/baxter_cart_move_lib.h>
+#include <blockfinder.h>
 
 using namespace std;
 

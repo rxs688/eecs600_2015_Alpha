@@ -20,7 +20,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Libraries
- cs_add_library(blockfinder_lib src/blocklib.cpp)   
+ cs_add_library(blockfinder_lib src/blockfinder.cpp)   
 
 # Executables
 # cs_add_executable(example src/example.cpp)

@@ -7,7 +7,6 @@ include_directories(${PCL_INCLUDE_DIRS})
 
 #looks like Eigen3 works, but Eigen does not!
 find_package(Eigen3 REQUIRED)
-
 include_directories(${Eigen3_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
