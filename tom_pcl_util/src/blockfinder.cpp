@@ -1,5 +1,8 @@
 #include "../include/blockfinder.h"
 
+Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud);
+void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr ccloud, int size);
+
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	//I would recommend prforming blockfinding AFTER we have already checked for a hand stopsignal or other Very High Points.
 	//You will be checking for errors in there first,
@@ -56,7 +59,41 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	c_avg_g = c_avg_g / bcount;
 	c_avg_b = c_avg_b / bcount;
 	
-	//COLOR CATEGORIZATION COULD GO HERE
+	float mindist = DBL_MAX;
+	float dist;
+	int probable_col;
+	
+	dist = sqrt(pow(c_avg_r - PERFECT_RED[0], 2) + pow(c_avg_g - PERFECT_RED[1], 2) + pow(c_avg_b - PERFECT_RED[2], 2));
+	if(dist < mindist){
+		mindist = dist;
+		probable_col = BLOCK_RED;
+	}
+	dist = sqrt(pow(c_avg_r - PERFECT_GREEN[0], 2) + pow(c_avg_g - PERFECT_GREEN[1], 2) + pow(c_avg_b - PERFECT_GREEN[2], 2));
+	if(dist < mindist){
+		mindist = dist;
+		probable_col = BLOCK_GREEN;
+	}
+	dist = sqrt(pow(c_avg_r - PERFECT_BLUE[0], 2) + pow(c_avg_g - PERFECT_BLUE[1], 2) + pow(c_avg_b - PERFECT_BLUE[2], 2));
+	if(dist < mindist){
+		mindist = dist;
+		probable_col = BLOCK_BLUE;
+	}
+	dist = sqrt(pow(c_avg_r - PERFECT_WHITE[0], 2) + pow(c_avg_g - PERFECT_WHITE[1], 2) + pow(c_avg_b - PERFECT_WHITE[2], 2));
+	if(dist < mindist){
+		mindist = dist;
+		probable_col = BLOCK_WHITE;
+	}
+	dist = sqrt(pow(c_avg_r - PERFECT_WOOD[0], 2) + pow(c_avg_g - PERFECT_WOOD[1], 2) + pow(c_avg_b - PERFECT_WOOD[2], 2));
+	if(dist < mindist){
+		mindist = dist;
+		probable_col = BLOCK_WOOD;
+	}
+	dist = sqrt(pow(c_avg_r - PERFECT_BLACK[0], 2) + pow(c_avg_g - PERFECT_BLACK[1], 2) + pow(c_avg_b - PERFECT_BLACK[2], 2));
+	if(dist < mindist){
+		mindist = dist;
+		probable_col = BLOCK_BLACK;
+	}
+	
 	
 	float b = -(xx - yy) / (2 * xy);
 	
@@ -80,13 +117,16 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	Eigen::Vector3f maxis;
 	maxis << ax_x, ax_y, 0.0;
 	
+	Eigen::Vector3f avg_col;
+	avg_col << c_avg_r, c_avg_g, c_avg_b;
+
+	
 	block_data out;
 		out.centroid  = center;
-		out.r = c_avg_r;
-		out.g = c_avg_g;
-		out.b = c_avg_b;
+		out.color_avg = avg_col;
 		out.major_axis = maxis;
 		out.top_plane_z = max_z;
+		out.color_name = probable_col;
 	
 	return out;
 }
