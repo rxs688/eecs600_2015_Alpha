@@ -31,6 +31,6 @@ const double B_EPS = 0.1;
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
 Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud);
-void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr ccloud);
+void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr ccloud, int size);
 
 #endif

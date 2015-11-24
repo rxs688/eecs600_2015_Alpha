@@ -20,6 +20,7 @@
 
 struct block_data{
 	Eigen::Vector3f centroid;
+        Eigen::Vector3f norm_color;
 	float r;
 	float g;
 	float b;
