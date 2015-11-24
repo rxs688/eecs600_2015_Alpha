@@ -18,12 +18,35 @@
 #ifndef PCL_BLOCKFIND_H_
 #define PCL_BLOCKFIND_H_
 
+enum block_color{
+	BLOCK_RED,
+	BLOCK_GREEN,
+	BLOCK_BLUE,
+	BLOCK_WHITE,
+	BLOCK_WOOD,
+	BLOCK_BLACK
+};
+
+const float PERFECT_RED[3] =	{1.0, 0.0, 0.0};
+const float PERFECT_GREEN[3] =	{0.0, 1.0, 0.0};
+const float PERFECT_BLUE[3] =	{0.0, 0.0, 1.0};
+const float PERFECT_WHITE[3] =	{1.0, 1.0, 1.0};
+const float PERFECT_WOOD[3] =	{1.0, 1.0, 0.0};
+const float PERFECT_BLACK[3] =	{0.0, 0.0, 0.0};
+
+const float PERFECT_COLORS[6][3] = {PERFECT_RED, PERFECT_GREEN, PERFECT_BLUE, PERFECT_WHITE, PERFECT_WOOD, PERFECT_BLACK};
+
 struct block_data{
 	Eigen::Vector3f centroid;
+<<<<<<< HEAD
         Eigen::Vector3f norm_color;
 	float r;
 	float g;
 	float b;
+=======
+	Eigen::Vector3f color_avg;
+	block_color color_name;
+>>>>>>> f3ebbe038b5e18e08d45b30952b3a967bf882f65
 	Eigen::Vector3f major_axis;
 	float top_plane_z;
 };
@@ -31,7 +54,5 @@ struct block_data{
 const double B_EPS = 0.1;
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
-Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud);
-void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr ccloud, int size);
 
 #endif
