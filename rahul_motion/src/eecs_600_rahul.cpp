@@ -9,27 +9,48 @@
 #include <blockfinder.h>
 
 using namespace std;
-int g_my_states = 0;
+int g_my_states = GOTO_PREPOSE_INIT;
+int g_my_prevState = g_my_states;
+
+void HandDetectioncb()
+{
+  if (true/*hand is there*/)
+  {
+      g_my_prevState = g_my_states;
+      g_my_states = GOTO_IDLE_WAIT;
+  }
+  else 
+  {
+      g_my_states = g_my_prevState;
+      g_my_prevState = g_my_states;
+  }
+
+}
+
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "PS8_eecs_example"); //node name
+    ros::init(argc, argv, "eecs600_Alpha"); //node name
     ros::NodeHandle nh;
-    cwru_action::trajGoal goal;    
+    cwru_action::trajGoal goal;  
+    tf::StampedTransform tf_kpc_to_torso_frame; //transform sensor frame to torso frame
+    tf::TransformListener tf_listener;          //start a transform listener
+    bool tferr = true;
+    // subscribe to Kinect point cloud data  
     CwruPclUtils cwru_pcl_utils(&nh);
     ArmMotionCommander arm_motion_commander(&nh);
-    
+    // Wait for cart move action client to initialize
     arm_motion_commander.initalize();
+    //Subscribe to action server of Kristina Hand detection
  
-    tf::StampedTransform tf_kpc_to_torso_frame; //use this to transform sensor frame to torso frame
-    tf::TransformListener tf_listener; //start a transform listener
-    bool tferr = true;
+ 
     ROS_INFO("waiting for tf between torso and kinect PC frame...");
     while (tferr)
     {
         tferr = false;
         try
         {
+
             tf_listener.lookupTransform("torso","kinect_pc_frame", 
                                         ros::Time(0), 
                                         tf_kpc_to_torso_frame);
@@ -42,7 +63,7 @@ int main(int argc, char** argv)
             ros::spinOnce();
         }
     }
-    //tf-listener found a complete chain from kpc to world;
+    //tf-listener found a complete chain from kinect pc frame to Torso;
     ROS_INFO("tf is good"); 
     //convert the tf to an Eigen::Affine:
     Eigen::Affine3f A_kpc_wrt_torso = cwru_pcl_utils.transformTFToEigen(tf_kpc_to_torso_frame);
@@ -58,6 +79,14 @@ int main(int argc, char** argv)
     {
         switch (g_my_states)
         {
+            case GOTO_PREPOSE_INIT:
+                 rtn_val=arm_motion_commander.plan_move_to_pre_pose(); 
+                 //send command to execute planned motion
+                 rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+                 // Go to state of take snapshot
+                 g_my_states = TAKE_SNAPSHOT; 
+                 break;
+
             case TAKE_SNAPSHOT:
             {
                  while (!cwru_pcl_utils.got_kinect_cloud())
@@ -66,14 +95,14 @@ int main(int argc, char** argv)
                     ros::spinOnce();
                     ros::Duration(1.0).sleep();
                  }
-                 ROS_INFO("got a pointcloud");
-                 cwru_pcl_utils.save_kinect_snapshot();
-                 cwru_pcl_utils.save_kinect_clr_snapshot();
+                 ROS_INFO("got a kinect pointcloud");
+                 //cwru_pcl_utils.save_kinect_snapshot();     not needed for now
+                 //cwru_pcl_utils.save_kinect_clr_snapshot(); not needed for now
                  g_my_states = COMPUTE_CENTROID;
                  break;
             }
                  
-                 // we need to compute the centroid
+            // we need to compute the centroid
             case COMPUTE_CENTROID:
             {
                  // Tranform wrt to torso
@@ -83,7 +112,7 @@ int main(int argc, char** argv)
                  
                  // Get the Transfromed Kinect point Cloud
                  cwru_pcl_utils.get_transformed_kinect_points(transformed_kinect_points);
-                 //Get the Raw Clr Points
+                 //Get the Raw Color Points
                  cwru_pcl_utils.get_kinect_clr_pts(raw_kinect_clr_points);
                  
                  //Copy the Clr data into the transformed Kinect Data
@@ -128,7 +157,7 @@ int main(int argc, char** argv)
             }
             case PICKUP_BLOCK:
             {
-                // Open the Gripper 
+               // Open the Gripper 
 
                //go down by dp value
                dp_displacement<< 0,0,0.25;
@@ -162,23 +191,22 @@ int main(int argc, char** argv)
                  g_my_states = GOTO_PREPOSE_FINAL; 
                  break;
 
-            case GOTO_PREPOSE_INIT:
-                 rtn_val=arm_motion_commander.plan_move_to_pre_pose(); 
-                 //send command to execute planned motion
-                 rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-                 g_my_states = GOTO_PREPOSE_FINAL; 
-                 break;
-
             case GOTO_PREPOSE_FINAL:
                  rtn_val=arm_motion_commander.plan_move_to_pre_pose();   
                  //send command to execute planned motion
                  rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-                 g_my_states = TAKE_SNAPSHOT;
                  break;
+
+            case GOTO_IDLE_WAIT:
+                // Wait here till hand is removed
+                break;
 
         } // End of Case statement
         ros::Duration(0.5).sleep(); // sleep for half a second
         ros::spinOnce();
+        
+        // we are done here, exit the code
+        if(g_my_states == GOTO_PREPOSE_FINAL) break;
     }
     ROS_INFO("my work here is done!");
 
