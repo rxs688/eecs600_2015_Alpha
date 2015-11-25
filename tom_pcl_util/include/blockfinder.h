@@ -30,8 +30,8 @@ enum block_color{
 const float PERFECT_RED[3] =	{1.0, 0.0, 0.0};
 const float PERFECT_GREEN[3] =	{0.0, 1.0, 0.0};
 const float PERFECT_BLUE[3] =	{0.0, 0.0, 1.0};
-const float PERFECT_WHITE[3] =	{1.0, 1.0, 1.0};
-const float PERFECT_WOOD[3] =	{1.0, 1.0, 0.0};
+const float PERFECT_WHITE[3] =	{0.333333, 0.333333, 0.333333};
+const float PERFECT_WOOD[3] =	{0.666666, 0.666666, 0.666666};
 const float PERFECT_BLACK[3] =	{0.0, 0.0, 0.0};
 
 const float PERFECT_COLORS[6][3] = {PERFECT_RED, PERFECT_GREEN, PERFECT_BLUE, PERFECT_WHITE, PERFECT_WOOD, PERFECT_BLACK};

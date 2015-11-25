@@ -38,9 +38,8 @@ const float PERFECT_COLORS[6][3] = {PERFECT_RED, PERFECT_GREEN, PERFECT_BLUE, PE
 
 struct block_data{
 	Eigen::Vector3f centroid;
-	float r;
-	float g;
-	float b;
+	Eigen::Vector3f color_avg;
+	block_color color_name;
 	Eigen::Vector3f major_axis;
 	float top_plane_z;
 };
