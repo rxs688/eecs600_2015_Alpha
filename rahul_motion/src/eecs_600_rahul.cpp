@@ -6,14 +6,20 @@
 #include <cwru_action/trajAction.h>
 #include <eecs600_alpha_pcl_utils/baxter_cart_move_lib.h>
 #include <eecs600_alpha_pcl_utils/eecs_600_rahul.h>
+#include <kristina_hmi/HandDetectionHmiAction.h>
 #include <blockfinder.h>
 
 using namespace std;
 int g_my_states = GOTO_PREPOSE_INIT;
 int g_my_prevState = g_my_states;
+int g_count =0;
 
-void HandDetectioncb()
+void HandDetectioncb(const actionlib::SimpleClientGoalState& state,
+                     const kristina_hmi::HandDetectionHmiResultConstPtr& result)
 {
+  ROS_INFO(" doneCb: server responded with state [%s]", state.toString().c_str());
+  int diff = result->output - result->goal_stamp;
+
   if (true/*hand is there*/)
   {
       g_my_prevState = g_my_states;
@@ -36,14 +42,27 @@ int main(int argc, char** argv)
     tf::StampedTransform tf_kpc_to_torso_frame; //transform sensor frame to torso frame
     tf::TransformListener tf_listener;          //start a transform listener
     bool tferr = true;
+    kristina_hmi::HandDetectionHmiGoal handGoal; 
     // subscribe to Kinect point cloud data  
     CwruPclUtils cwru_pcl_utils(&nh);
     ArmMotionCommander arm_motion_commander(&nh);
     // Wait for cart move action client to initialize
     arm_motion_commander.initalize();
-    //Subscribe to action server of Kristina Hand detection
- 
- 
+
+    //------Subscribe to action server of Kristina Hand detection-----------------
+    // the "true" argument says that we want our new client to run as a separate thread (a good idea)
+    actionlib::SimpleActionClient<kristina_hmi::HandDetectionHmiAction> action_client("hand_detect", true);       
+    // attempt to connect to the server:
+    ROS_INFO("waiting for Hand detection Server: ");
+    bool server_exists = action_client.waitForServer(ros::Duration(5.0)); // wait for up to 5 seconds
+    if (!server_exists)
+    {
+       ROS_WARN("could not connect to server; halting");
+       return 0; // bail out; optionally, could print a warning message and retry
+    }
+    ROS_INFO("connected to action server");  // if here, then we connected to the server;
+    
+    //------Subscribe to Tranform Listener-------------
     ROS_INFO("waiting for tf between torso and kinect PC frame...");
     while (tferr)
     {
@@ -80,12 +99,25 @@ int main(int argc, char** argv)
         switch (g_my_states)
         {
             case GOTO_PREPOSE_INIT:
+            {
                  rtn_val=arm_motion_commander.plan_move_to_pre_pose(); 
                  //send command to execute planned motion
                  rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+
+                 // Send Request to Detect the Hand
+                 handGoal.input = g_count; // this merely sequentially numbers the goals sent
+                 action_client.sendGoal(handGoal,&HandDetectioncb);
+        
+                 bool finished_before_timeout = action_client.waitForResult(ros::Duration(5.0));
+                 if (!finished_before_timeout)
+                 {
+                    ROS_WARN("giving up waiting on result for goal number %d",g_count);
+                 }
+
                  // Go to state of take snapshot
                  g_my_states = TAKE_SNAPSHOT; 
                  break;
+            }
 
             case TAKE_SNAPSHOT:
             {
