@@ -10,13 +10,13 @@
 // these are referred to by the root name (demo) and appended name (Action)
 // If you write a new client of the server in this package, you will need to include hand_detect_server in your package.xml,
 // and include the header file below
-#include<hand_detect_server/demoAction.h>
+#include<kristina_hmi/HandDetectionHmiAction.h>
 
 
 // This function will be called once when the goal completes
 // this is optional, but it is a convenient way to get access to the "result" message sent by the server
 void doneCb(const actionlib::SimpleClientGoalState& state,
-        const hand_detect_server::demoResultConstPtr& result) {
+            const kristina_hmi::HandDetectionHmiResultConstPtr& result) {
     ROS_INFO(" doneCb: server responded with state [%s]", state.toString().c_str());
     int diff = result->output - result->goal_stamp;
     ROS_INFO("got result output = %d; goal_stamp = %d; diff = %d",result->output,result->goal_stamp,diff);
@@ -26,11 +26,11 @@ int main(int argc, char** argv) {
         ros::init(argc, argv, "demo_action_client_node"); // name this node 
         int g_count = 0;
         // here is a "goal" object compatible with the server, as defined in hand_detect_server/action
-        hand_detect_server::demoGoal goal; 
+        kristina_hmi::HandDetectionHmiGoal goal; 
         
         // use the name of our server, which is: hand_detect (named in hand_detect_server.cpp)
         // the "true" argument says that we want our new client to run as a separate thread (a good idea)
-        actionlib::SimpleActionClient<hand_detect_server::demoAction> action_client("hand_detect", true);
+        actionlib::SimpleActionClient<kristina_hmi::HandDetectionHmiAction> action_client("hand_detect", true);
         
         // attempt to connect to the server:
         ROS_INFO("waiting for server: ");
