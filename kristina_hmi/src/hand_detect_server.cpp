@@ -8,7 +8,7 @@
 // The action message can be found in: .../hand_detect_server/action/demo.action
 // Automated header generation creates multiple headers for message I/O
 // These are referred to by the root name (demo) and appended name (Action)
-#include <hand_detect_server/demoAction.h>
+#include <kristina_hmi/HandDetectionHmiAction.h>
 
 int g_count = 0;
 bool g_count_failure = false;
@@ -21,12 +21,12 @@ private:
     // this class will own a "SimpleActionServer" called "as_".
     // it will communicate using messages defined in hand_detect_server/action/demo.action
     // the type "demoAction" is auto-generated from our name "demo" and generic name "Action"
-    actionlib::SimpleActionServer<hand_detect_server::demoAction> as_;
+    actionlib::SimpleActionServer<kristina_hmi::HandDetectionHmiAction> as_;
     
     // here are some message types to communicate with our client(s)
-    hand_detect_server::demoGoal goal_; // goal message, received from client
-    hand_detect_server::demoResult result_; // put results here, to be sent back to the client when done w/ goal
-    hand_detect_server::demoFeedback feedback_; // not used in this example; 
+    kristina_hmi::HandDetectionHmiGoal goal_; // goal message, received from client
+    kristina_hmi::HandDetectionHmiResult result_; // put results here, to be sent back to the client when done w/ goal
+    kristina_hmi::HandDetectionHmiFeedback feedback_; // not used in this example; 
     // would need to use: as_.publishFeedback(feedback_); to send incremental feedback to the client
 
 
@@ -37,7 +37,7 @@ public:
     ~HandDetectServer(void) {
     }
     // Action Interface
-    void executeCB(const actionlib::SimpleActionServer<hand_detect_server::demoAction>::GoalConstPtr& goal);
+    void executeCB(const actionlib::SimpleActionServer<kristina_hmi::HandDetectionHmiAction>::GoalConstPtr& goal);
 };
 
 //implementation of the constructor:
@@ -69,7 +69,7 @@ HandDetectServer::HandDetectServer() :
 // defined in our package, "hand_detect_server", in the subdirectory "action", called "demo.action"
 // The name "demo" is prepended to other message types created automatically during compilation.
 // e.g.,  "demoAction" is auto-generated from (our) base name "demo" and generic name "Action"
-void HandDetectServer::executeCB(const actionlib::SimpleActionServer<hand_detect_server::demoAction>::GoalConstPtr& goal) {
+void HandDetectServer::executeCB(const actionlib::SimpleActionServer<kristina_hmi::HandDetectionHmiAction>::GoalConstPtr& goal) {
     //ROS_INFO("in executeCB");
     //ROS_INFO("goal input is: %d", goal->input);
     //do work here: this is where your interesting code goes
