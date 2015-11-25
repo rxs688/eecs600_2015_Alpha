@@ -46,7 +46,8 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	float xx = 0;
 	float yy = 0;
 	float xy = 0;
-	for(int i = 0; i < bcount; i++){
+	for(int i = 0; i < bcount; i++)
+        {
 		pcl::PointXYZRGB * p = &(block_candidate_points->points[i]);
 		c_avg_r = c_avg_r + p->r;
 		c_avg_g = c_avg_g + p->g;
@@ -55,13 +56,15 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 		yy = yy + (p->y - center[1]) * (p->y - center[1]);
 		xy = xy + (p->x - center[0]) * (p->y - center[1]);
 	}
+
 	c_avg_r = c_avg_r / bcount;
 	c_avg_g = c_avg_g / bcount;
 	c_avg_b = c_avg_b / bcount;
 	
 	float mindist = DBL_MAX;
 	float dist;
-	int probable_col;
+	//int 
+        block_color probable_col;
 	
 	dist = sqrt(pow(c_avg_r - PERFECT_RED[0], 2) + pow(c_avg_g - PERFECT_RED[1], 2) + pow(c_avg_b - PERFECT_RED[2], 2));
 	if(dist < mindist){
