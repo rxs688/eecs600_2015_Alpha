@@ -11,6 +11,7 @@ const int PICKUP_BLOCK = 4;
 const int MOVE_BLOCK=5;
 const int DROP_BLOCK = 6;
 const int GOTO_PREPOSE_FINAL = 7;
+const int GOTO_IDLE_WAIT = 8;
 
 
 #endif  
