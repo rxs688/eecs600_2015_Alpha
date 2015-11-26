@@ -60,7 +60,7 @@ int main(int argc, char** argv)
        ROS_WARN("could not connect to server; halting");
        return 0; // bail out; optionally, could print a warning message and retry
     }
-    ROS_INFO("connected to action server");  // if here, then we connected to the server;
+    ROS_INFO("connected to action server Hand Detection"); 
     
     //------Subscribe to Tranform Listener-------------
     ROS_INFO("waiting for tf between torso and kinect PC frame...");
@@ -100,6 +100,7 @@ int main(int argc, char** argv)
         {
             case GOTO_PREPOSE_INIT:
             {
+                 ROS_INFO("State : GOTO_PREPOSE_INIT:"); 
                  rtn_val=arm_motion_commander.plan_move_to_pre_pose(); 
                  //send command to execute planned motion
                  rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
@@ -121,6 +122,7 @@ int main(int argc, char** argv)
 
             case TAKE_SNAPSHOT:
             {
+                 ROS_INFO("State : TAKE_SNAPSHOT:"); 
                  while (!cwru_pcl_utils.got_kinect_cloud())
                  {
                     ROS_INFO("did not receive pointcloud");
@@ -128,6 +130,7 @@ int main(int argc, char** argv)
                     ros::Duration(1.0).sleep();
                  }
                  ROS_INFO("got a kinect pointcloud");
+                 cwru_pcl_utils.transform_kinect_cloud(A_kpc_wrt_torso);
                  //cwru_pcl_utils.save_kinect_snapshot();     not needed for now
                  //cwru_pcl_utils.save_kinect_clr_snapshot(); not needed for now
                  g_my_states = COMPUTE_CENTROID;
@@ -137,6 +140,7 @@ int main(int argc, char** argv)
             // we need to compute the centroid
             case COMPUTE_CENTROID:
             {
+                 ROS_INFO("State : COMPUTE_CENTROID"); 
                  // Tranform wrt to torso
                  pcl::PointCloud<pcl::PointXYZ> transformed_kinect_points;
                  pcl::PointCloud<pcl::PointXYZRGB> raw_kinect_clr_points;
@@ -173,10 +177,12 @@ int main(int argc, char** argv)
             }
             case GOTO_CENTROID:
             { 
+                ROS_INFO("State : GOTO_CENTROID"); 
                 rtn_val = arm_motion_commander.rt_arm_request_tool_pose_wrt_torso();
                 rt_tool_pose = arm_motion_commander.get_rt_tool_pose_stamped();
                 //alter the tool pose:
                 // Be a little above the Centroid
+                ROS_INFO ("Centroid : %f, %f, %f ",myBlockData.centroid[0], myBlockData.centroid[1], myBlockData.centroid[2]);  
                 rt_tool_pose.pose.position.z = myBlockData.centroid[2]-0.10; 
                 rt_tool_pose.pose.position.x = myBlockData.centroid[0];
                 rt_tool_pose.pose.position.y = myBlockData.centroid[1];
@@ -189,6 +195,7 @@ int main(int argc, char** argv)
             }
             case PICKUP_BLOCK:
             {
+               ROS_INFO("State : PICKUP_BLOCK"); 
                // Open the Gripper 
 
                //go down by dp value
