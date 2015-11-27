@@ -7,5 +7,6 @@
 `rosrun baxter_cartesian_moves baxter_cart_move_as`
 `rosrun rviz rviz`
 `rosrun kristina_hmi hand_detect_server`
+`rosrun marc_gripper gripper_motor_node`
 `rosrun eecs600_rahul_pcl_utils eecs600Alpha`
 
