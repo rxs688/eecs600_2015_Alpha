@@ -1,4 +1,7 @@
-
+#include <ros/ros.h>
+#include <std_msgs/Int16.h>
+#include <std_msgs/Bool.h>
+#include <math.h>
 #include <cwru_pcl_utils/cwru_pcl_utils.h>
 #include <baxter_core_msgs/JointCommand.h>
 #include <actionlib/client/simple_action_client.h>
@@ -42,10 +45,26 @@ int main(int argc, char** argv)
     tf::StampedTransform tf_kpc_to_torso_frame; //transform sensor frame to torso frame
     tf::TransformListener tf_listener;          //start a transform listener
     bool tferr = true;
-    kristina_hmi::HandDetectionHmiGoal handGoal; 
+    char cmd_topic_name[50];
+    int motor_id=1; 
+    kristina_hmi::HandDetectionHmiGoal handGoal;
+    Eigen::Vector3f plane_normal, slectedCentroid;
+    Eigen::Vector3d dp_displacement;
+    geometry_msgs::PoseStamped rt_tool_pose;
+    double plane_dist, dpp= .01;
+    int rtn_val;
+    std_msgs::Int16 int_angle; 
+    std::vector<int> myindices;
+    block_data myBlockData;
+
     // subscribe to Kinect point cloud data  
     CwruPclUtils cwru_pcl_utils(&nh);
     ArmMotionCommander arm_motion_commander(&nh);
+
+    //------Publish to the Gripper listner-----------------
+    sprintf(cmd_topic_name,"dynamixel_motor%d_cmd",motor_id);
+    ros::Publisher dyn_pub = nh.advertise<std_msgs::Int16>(cmd_topic_name, 1);
+
     // Wait for cart move action client to initialize
     arm_motion_commander.initalize();
 
@@ -69,7 +88,6 @@ int main(int argc, char** argv)
         tferr = false;
         try
         {
-
             tf_listener.lookupTransform("torso","kinect_pc_frame", 
                                         ros::Time(0), 
                                         tf_kpc_to_torso_frame);
@@ -86,13 +104,6 @@ int main(int argc, char** argv)
     ROS_INFO("tf is good"); 
     //convert the tf to an Eigen::Affine:
     Eigen::Affine3f A_kpc_wrt_torso = cwru_pcl_utils.transformTFToEigen(tf_kpc_to_torso_frame);
-    Eigen::Vector3f plane_normal, slectedCentroid;
-    Eigen::Vector3d dp_displacement;
-    geometry_msgs::PoseStamped rt_tool_pose;
-    double plane_dist, dpp= .01;
-    int rtn_val;
-    std::vector<int> myindices;
-    block_data myBlockData;
 
     while (ros::ok())
     {
@@ -144,7 +155,8 @@ int main(int argc, char** argv)
                  // Tranform wrt to torso
                  pcl::PointCloud<pcl::PointXYZ> transformed_kinect_points;
                  pcl::PointCloud<pcl::PointXYZRGB> raw_kinect_clr_points;
-                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformed_kinect_clr_points_ptr (new pcl::PointCloud<pcl::PointXYZRGB>); ;
+                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformed_kinect_clr_points_ptr (
+                                                     new pcl::PointCloud<pcl::PointXYZRGB>); ;
                  
                  // Get the Transfromed Kinect point Cloud
                  cwru_pcl_utils.get_transformed_kinect_points(transformed_kinect_points);
@@ -197,6 +209,10 @@ int main(int argc, char** argv)
             {
                ROS_INFO("State : PICKUP_BLOCK"); 
                // Open the Gripper 
+               int_angle.data = 3000;
+               ROS_INFO("sending open command");
+               dyn_pub.publish(int_angle); 
+               ros::Duration(1.0).sleep(); // sleep for half a second
 
                //go down by dp value
                dp_displacement<< 0,0,0.25;
@@ -207,6 +223,10 @@ int main(int argc, char** argv)
                   rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
                }
                 // Close the Gripper
+               int_angle.data = 3800;
+               ROS_INFO("sending Close command");
+               dyn_pub.publish(int_angle); 
+               ros::Duration(1.0).sleep(); // sleep for half a second
                g_my_states = MOVE_BLOCK; 
                break;
             }
@@ -226,9 +246,15 @@ int main(int argc, char** argv)
              }
 
             case DROP_BLOCK:
+             {
                  // Open the Gripper
+                 int_angle.data = 3000;
+                 ROS_INFO("sending open command");
+                 dyn_pub.publish(int_angle); 
+                 ros::Duration(1.0).sleep(); // sleep for half a second
                  g_my_states = GOTO_PREPOSE_FINAL; 
                  break;
+             }
 
             case GOTO_PREPOSE_FINAL:
                  rtn_val=arm_motion_commander.plan_move_to_pre_pose();   
