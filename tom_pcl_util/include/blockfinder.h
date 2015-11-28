@@ -15,10 +15,6 @@
 #include <pcl-1.7/pcl/impl/point_types.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 
-#include <sensor_msgs/CompressedImage.h>
-#include <sensor_msgs/Image.h>
-#include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/image_encodings.h>
 
 #ifndef PCL_BLOCKFIND_H_
 #define PCL_BLOCKFIND_H_
@@ -35,11 +31,14 @@ enum block_color{
 const float PERFECT_RED[3] =	{1.0, 0.0, 0.0};
 const float PERFECT_GREEN[3] =	{0.0, 1.0, 0.0};
 const float PERFECT_BLUE[3] =	{0.0, 0.0, 1.0};
-const float PERFECT_WHITE[3] =	{0.333333, 0.333333, 0.333333};
-const float PERFECT_WOOD[3] =	{0.666666, 0.666666, 0.666666};
+const float PERFECT_WHITE[3] =	{1.0, 1.0, 1.0};
+const float PERFECT_WOOD[3] =	{1.0, 1.0, 0.0};
 const float PERFECT_BLACK[3] =	{0.0, 0.0, 0.0};
 
 const float PERFECT_COLORS[6][3] = {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {1.0, 1.0, 0.0}, {0.0, 0.0, 0.0}};
+
+ros::Publisher xdisplay_pub;
+sensor_msgs::ImagePtr baxter_red, baxter_yellow, baxter_blue;
 
 struct block_data
 {
@@ -62,14 +61,3 @@ const double B_EPS = 0.1;
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
 
 #endif
-
-class FaceDisplay
-{
-private:
-    ros::NodeHandle n;
-    ros::Publisher xdisplay_pub;
-    sensor_msgs::ImagePtr baxter_blue, baxter_black;
-public:
-    FaceDisplay();
-    //void updateHead(const baxter_core_msgs::HeadState::ConstPtr&);
-};

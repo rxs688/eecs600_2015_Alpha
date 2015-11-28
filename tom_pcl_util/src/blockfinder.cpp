@@ -1,21 +1,9 @@
 #include "../include/blockfinder.h"
-#include "opencv/highgui.h"
 
 Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud);
 void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr ccloud, int size);
 
-/* instantiates ros objects and face images */
-FaceDisplay::FaceDisplay() 
-{
-    xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
-    
-    //Loads the images used for the screen on Baxter's head.
-    cv::Mat black_mat = cv::imread("../../../kristina_hmi/images/baxter_black.png", CV_LOAD_IMAGE_COLOR), 
-    		blue_mat = cv::imread("../../../kristina_hmi/images/baxter_blue.png", CV_LOAD_IMAGE_COLOR);
-   
-   	baxter_black = cv_bridge::CvImage(std_msgs::Header(), "bgr8", black_mat).toImageMsg(); 
-    baxter_blue = cv_bridge::CvImage(std_msgs::Header(), "bgr8", blue_mat).toImageMsg();
-}
+xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	//I would recommend prforming blockfinding AFTER we have already checked for a hand stopsignal or other Very High Points.
@@ -94,7 +82,6 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_BLUE;
-		//xdisplay_pub.publish(baxter_blue);
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_WHITE[0], 2) + pow(c_avg_g - PERFECT_WHITE[1], 2) + pow(c_avg_b - PERFECT_WHITE[2], 2));
 	if(dist < mindist){
@@ -175,7 +162,5 @@ void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr subject_cloud, int s
 		}
 	}
 }
-
-
 
 

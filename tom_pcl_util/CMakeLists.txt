@@ -10,30 +10,6 @@ find_package(Eigen3 REQUIRED)
 include_directories(${Eigen3_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  sensor_msgs
-  cv_bridge
-  baxter_core_msgs
-  pcl_conversions
-  pcl_ros
-  message_generation
-)
-
-
- #generate_messages(
-  # DEPENDENCIES
-  # std_msgs
-  # sensor_msgs
- #)
-
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES operation_plushie_node
-  CATKIN_DEPENDS message_runtime roscpp sensor_msgs cv_bridge baxter_core_msgs
-#  DEPENDS system_lib
-)
-
 catkin_simple()
 
 # example boost usage
@@ -57,7 +33,3 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 cs_install()
 cs_export()
     
- #target_link_libraries(#blockfinder
-  #  ${OpenCV_LIBRARIES}
-   # ${catkin_LIBRARIES}
- #)
