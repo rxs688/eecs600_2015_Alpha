@@ -1,9 +1,36 @@
 #include "../include/blockfinder.h"
+Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud)
+{
+    Eigen::Vector3f centroid;
+    centroid << 0, 0, 0;
 
-Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud);
-void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr ccloud, int size);
+    int size = pcl_cloud->width * pcl_cloud->height;
+    std::cout << "frame: " << pcl_cloud->header.frame_id << std::endl;
+    for (size_t i = 0; i != size; ++i)
+    {
+        centroid += pcl_cloud->points[i].getVector3fMap();
+    }
+    if (size > 0)
+    {
+        centroid /= ((float) size);
+    }
+    return centroid;
+}
 
-
+void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr subject_cloud, int size)
+{
+	for(int i = 0; i < size; i++)
+        {
+		pcl::PointXYZRGB * p = &(subject_cloud->points[i]);
+		float n = sqrt(pow(p->r, 2) + pow(p->g, 2) + pow(p->b, 2));
+		if(n != 0.0)
+                {
+			p->r = p->r / n;
+			p->g = p->g / n;
+			p->b = p->b / n;
+		}
+	}
+}
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
 {
@@ -138,31 +165,5 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
 	return out;
 }
 
-Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud) {
-    Eigen::Vector3f centroid;
-    centroid << 0, 0, 0;
-
-    int size = pcl_cloud->width * pcl_cloud->height;
-    std::cout << "frame: " << pcl_cloud->header.frame_id << std::endl;
-    for (size_t i = 0; i != size; ++i) {
-        centroid += pcl_cloud->points[i].getVector3fMap();
-    }
-    if (size > 0) {
-        centroid /= ((float) size);
-    }
-    return centroid;
-}
-
-void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr subject_cloud, int size){
-	for(int i = 0; i < size; i++){
-		pcl::PointXYZRGB * p = &(subject_cloud->points[i]);
-		float n = sqrt(pow(p->r, 2) + pow(p->g, 2) + pow(p->b, 2));
-		if(n != 0.0){
-			p->r = p->r / n;
-			p->g = p->g / n;
-			p->b = p->b / n;
-		}
-	}
-}
 
 
