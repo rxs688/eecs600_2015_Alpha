@@ -3,27 +3,27 @@
 Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud);
 void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr ccloud, int size);
 
-xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
 
-block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
+
+block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
+{
 	//I would recommend prforming blockfinding AFTER we have already checked for a hand stopsignal or other Very High Points.
 	//You will be checking for errors in there first,
 	//so IN THEORY we shouldn't have to worry about them causing false positives here.
 	//However, I may come back and implement that functionality here as well.
 	//Also, since it is very much a point-cloud-related problem, feel free to email/text/whatever
 	//me if you want me to do the outlier checking or anything else for the HMI.
-	
+	ros::NodeHandle n;
 	float max_z = -DBL_MAX;
 	int npts = inputCloud->width * inputCloud->height;
-	pcl::PointXYZRGB seedpoint;
 	int bcount = 0;
-	
+	ros::Publisher xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
+
 	for(int i = 0; i < npts; i++)
         {
 		if(inputCloud->points[i].z > max_z)
                 {
-			seedpoint = inputCloud->points[i];
-			max_z = seedpoint.z;
+			max_z = inputCloud->points[i].z;
 		}
 	}
 	
@@ -31,8 +31,10 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr block_candidate_points(new pcl::PointCloud<pcl::PointXYZRGB>);
 	
-	for(int i = 0; i < npts; i++){
-		if(abs(inputCloud->points[i].z - max_z) < B_EPS){
+	for(int i = 0; i < npts; i++)
+        {
+		if(fabs(inputCloud->points[i].z - max_z) < B_EPS)
+                {
 			block_candidate_points->points.push_back(inputCloud->points[i]);
 			bcount++;
 		}
