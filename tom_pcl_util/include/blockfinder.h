@@ -15,6 +15,11 @@
 #include <pcl-1.7/pcl/impl/point_types.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <sensor_msgs/CompressedImage.h>
+#include <sensor_msgs/Image.h>
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
+
 #ifndef PCL_BLOCKFIND_H_
 #define PCL_BLOCKFIND_H_
 
@@ -57,3 +62,14 @@ const double B_EPS = 0.1;
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
 
 #endif
+
+class FaceDisplay
+{
+private:
+    ros::NodeHandle n;
+    ros::Publisher xdisplay_pub;
+    sensor_msgs::ImagePtr baxter_blue, baxter_black;
+public:
+    FaceDisplay();
+    //void updateHead(const baxter_core_msgs::HeadState::ConstPtr&);
+};
