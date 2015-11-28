@@ -144,6 +144,7 @@ int main(int argc, char** argv)
                  cwru_pcl_utils.transform_kinect_cloud(A_kpc_wrt_torso);
                  //cwru_pcl_utils.save_kinect_snapshot();     not needed for now
                  //cwru_pcl_utils.save_kinect_clr_snapshot(); not needed for now
+                 cwru_pcl_utils.save_transformed_kinect_snapshot();
                  g_my_states = COMPUTE_CENTROID;
                  break;
             }
