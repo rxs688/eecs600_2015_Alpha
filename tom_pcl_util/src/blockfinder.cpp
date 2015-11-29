@@ -1,4 +1,7 @@
 #include "../include/blockfinder.h"
+#include <stdlib.h>
+#include <unistd.h>
+
 Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud)
 {
     Eigen::Vector3f centroid;
@@ -30,6 +33,36 @@ void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr subject_cloud, int s
 			p->b = p->b / n;
 		}
 	}
+}
+
+void forkPrint(block_color probable_col)
+{
+	int pid;
+	pid=fork();
+	if (pid < 0){ //error occurs
+			perror("fork{} failed");
+			exit(1);
+	} else if (pid == 0){ // Child process
+
+      switch ( probable_col )
+      {
+         case BLOCK_BLUE:
+            sleep(10);
+			//execl("rosrun head_control xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_blue.png", NULL);
+			execlp("rosrun","rosrun","baxter_examples", "xdisplay_image.py","--file=Home/ros_ws/src/eecs600_2015_Alpha/kristina_hmi/images/baxter_blue.png", NULL);
+            break;
+         case BLOCK_BLACK:
+           // lettera++;
+            break;
+         default:
+          //  nota++; //no block
+         	break;
+      }
+  	} else {// Parent process
+  		//wait (NULL)// Parent will wait for child to complete...
+  		ROS_INFO("Child complete");
+  		exit(0);
+  	}
 }
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
