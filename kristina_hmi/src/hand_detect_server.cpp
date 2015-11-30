@@ -9,6 +9,8 @@
 // Automated header generation creates multiple headers for message I/O
 // These are referred to by the root name (demo) and appended name (Action)
 #include <kristina_hmi/HandDetectionHmiAction.h>
+#include <vector>
+#include <stdlib.h>
 
 int g_count = 0;
 bool g_count_failure = false;
@@ -86,6 +88,8 @@ void HandDetectServer::executeCB(const actionlib::SimpleActionServer<kristina_hm
     g_count++; // keep track of total number of goals serviced since this server was started
     result_.output = g_count; // we'll use the member variable result_, defined in our class
     result_.goal_stamp = goal->input;
+
+
     
     // the class owns the action server, so we can use its member methods here
    

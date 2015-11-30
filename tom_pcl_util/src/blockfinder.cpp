@@ -1,17 +1,18 @@
 #include "../include/blockfinder.h"
+#include <vector>
 #include <stdlib.h>
-#include <unistd.h>
+using namespace std;
 
-Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud)
-{
+Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud, vector<int> &indices)
+ {
     Eigen::Vector3f centroid;
     centroid << 0, 0, 0;
 
-    int size = pcl_cloud->width * pcl_cloud->height;
-    std::cout << "frame: " << pcl_cloud->header.frame_id << std::endl;
-    for (size_t i = 0; i != size; ++i)
+    int size = indices.size();
+    std::cout << "frame: " << pcl_cloud->header.frame_id << "size : " << size << std::endl;
+    for (size_t i = 0; i < size; ++i)
     {
-        centroid += pcl_cloud->points[i].getVector3fMap();
+        centroid += pcl_cloud->points[indices[i]].getVector3fMap();
     }
     if (size > 0)
     {
@@ -20,89 +21,63 @@ Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud
     return centroid;
 }
 
-void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr subject_cloud, int size)
+void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr subject_cloud, vector<int> &indices)
 {
-	for(int i = 0; i < size; i++)
+    int size = indices.size();
+    for(int i = 0; i < size; i++)
+    {
+	pcl::PointXYZRGB * p = &(subject_cloud->points[indices[i]]);
+	float n = sqrt(pow(p->r, 2) + pow(p->g, 2) + pow(p->b, 2));
+	if(n != 0.0)
         {
-		pcl::PointXYZRGB * p = &(subject_cloud->points[i]);
-		float n = sqrt(pow(p->r, 2) + pow(p->g, 2) + pow(p->b, 2));
-		if(n != 0.0)
-                {
-			p->r = p->r / n;
-			p->g = p->g / n;
-			p->b = p->b / n;
-		}
-	}
-}
-
-void forkPrint(block_color probable_col)
-{
-	int pid;
-	pid=fork();
-	if (pid < 0){ //error occurs
-			perror("fork{} failed");
-			exit(1);
-	} else if (pid == 0){ // Child process
-
-      switch ( probable_col )
-      {
-         case BLOCK_BLUE:
-            sleep(10);
-			//execl("rosrun head_control xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_blue.png", NULL);
-			execlp("rosrun","rosrun","baxter_examples", "xdisplay_image.py","--file=Home/ros_ws/src/eecs600_2015_Alpha/kristina_hmi/images/baxter_blue.png", NULL);
-            break;
-         case BLOCK_BLACK:
-           // lettera++;
-            break;
-         default:
-          //  nota++; //no block
-         	break;
-      }
-  	} else {// Parent process
-  		//wait (NULL)// Parent will wait for child to complete...
-  		ROS_INFO("Child complete");
-  		exit(0);
-  	}
+	    p->r = p->r / n;
+	    p->g = p->g / n;
+	    p->b = p->b / n;
+        }
+    }
 }
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
-{
+ {
 	//I would recommend prforming blockfinding AFTER we have already checked for a hand stopsignal or other Very High Points.
 	//You will be checking for errors in there first,
 	//so IN THEORY we shouldn't have to worry about them causing false positives here.
 	//However, I may come back and implement that functionality here as well.
 	//Also, since it is very much a point-cloud-related problem, feel free to email/text/whatever
 	//me if you want me to do the outlier checking or anything else for the HMI.
-	ros::NodeHandle n;
+	
 	float max_z = -DBL_MAX;
 	int npts = inputCloud->width * inputCloud->height;
+	pcl::PointXYZRGB seedpoint;
 	int bcount = 0;
-	ros::Publisher xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
-
+	
 	for(int i = 0; i < npts; i++)
         {
-		if(inputCloud->points[i].z > max_z)
-                {
-			max_z = inputCloud->points[i].z;
-		}
+	    if(inputCloud->points[i].z > max_z)
+            {
+		seedpoint = inputCloud->points[i];
+		max_z = seedpoint.z;
+	    }
 	}
 	
 	ROS_INFO("LOCATED BLOCK OF HEIGHT %f.", max_z);
 	
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr block_candidate_points(new pcl::PointCloud<pcl::PointXYZRGB>);
-	
+	//pcl::PointCloud<pcl::PointXYZRGB>::Ptr block_candidate_points(
+        //                                new pcl::PointCloud<pcl::PointXYZRGB>);
+        vector<int> indices;
+        indices.clear();
 	for(int i = 0; i < npts; i++)
         {
-		if(fabs(inputCloud->points[i].z - max_z) < B_EPS)
-                {
-			block_candidate_points->points.push_back(inputCloud->points[i]);
-			bcount++;
-		}
+           if(abs(inputCloud->points[i].z - max_z) < B_EPS)
+           {
+               indices.push_back(i);
+	   }
 	}
+        int npts1 = indices.size();
+	ROS_INFO("No of points saved in Block Count %d ",npts1 );
+	Eigen::Vector3f center = computeCentroid(inputCloud, indices);
 	
-	Eigen::Vector3f center = computeCentroid(block_candidate_points);
-	
-	normalizeColors(block_candidate_points, bcount);
+	normalizeColors(inputCloud, indices);
 	
 	float c_avg_r = 0.0;
 	float c_avg_g = 0.0;
@@ -110,9 +85,9 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
 	float xx = 0;
 	float yy = 0;
 	float xy = 0;
-	for(int i = 0; i < bcount; i++)
+	for(int i = 0; i < npts1; i++)
         {
-		pcl::PointXYZRGB * p = &(block_candidate_points->points[i]);
+		pcl::PointXYZRGB * p = &(inputCloud->points[indices[i]]);
 		c_avg_r = c_avg_r + p->r;
 		c_avg_g = c_avg_g + p->g;
 		c_avg_b = c_avg_b + p->b;
@@ -134,31 +109,37 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_RED;
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_red.png");
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_GREEN[0], 2) + pow(c_avg_g - PERFECT_GREEN[1], 2) + pow(c_avg_b - PERFECT_GREEN[2], 2));
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_GREEN;
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_green.png");
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_BLUE[0], 2) + pow(c_avg_g - PERFECT_BLUE[1], 2) + pow(c_avg_b - PERFECT_BLUE[2], 2));
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_BLUE;
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_blue.png");
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_WHITE[0], 2) + pow(c_avg_g - PERFECT_WHITE[1], 2) + pow(c_avg_b - PERFECT_WHITE[2], 2));
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_WHITE;
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_white.png");
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_WOOD[0], 2) + pow(c_avg_g - PERFECT_WOOD[1], 2) + pow(c_avg_b - PERFECT_WOOD[2], 2));
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_WOOD;
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_wood.png");
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_BLACK[0], 2) + pow(c_avg_g - PERFECT_BLACK[1], 2) + pow(c_avg_b - PERFECT_BLACK[2], 2));
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_BLACK;
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_black.png");
 	}
 	
 	
@@ -168,7 +149,6 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
 	float c1_y = 1.0;
 	float c2_x = b - sqrt((b * b) + 1);
 	float c2_y = 1.0;
-	
 	float ax_x;
 	float ax_y;
 	
@@ -187,7 +167,7 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
 	Eigen::Vector3f avg_col;
 	avg_col << c_avg_r, c_avg_g, c_avg_b;
 
-	
+	ROS_INFO ( " Center :  %f, %f, %f ", center[0], center[1], center[2]);
 	block_data out;
 		out.centroid  = center;
 		out.color_avg = avg_col;
@@ -197,6 +177,5 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
 	
 	return out;
 }
-
 
 
