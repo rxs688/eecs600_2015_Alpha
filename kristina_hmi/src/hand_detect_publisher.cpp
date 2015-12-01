@@ -49,10 +49,10 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
    ros::Rate naptime(100.0); //create a ros object from the ros “Rate” class; 
    //set the sleep timer for 100Hz repetition rate (arg is in units of Hz)
 
-    hand_detected.data = 1;
+    hand_detected.data = false;
     //Based on the minimal_publisher node provided. 
 
-    hand_height=1; //TODO: Set value for height at which hand is considered detected. 
+    hand_height=.25; //TODO: Set value for height at which hand is considered detected. 
 
     while (ros::ok())
     {
@@ -86,13 +86,14 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
             {
           if(transformed_kinect_points.points[i].z > max_z)
                 {
-        seedpoint = transformed_kinect_points.points[i];
-        max_z = seedpoint.z;
+                seedpoint = transformed_kinect_points.points[i];
+                max_z = seedpoint.z;
           }
       }
       if(max_z>hand_height){
         hand_detected.data=true;
-      } else {hand_detected.data=0;}
+        ROS_INFO("SELECTED POINT %f", seedpoint.z);
+      } else {hand_detected.data=false;}
         
 
         my_publisher_object.publish(hand_detected); // publish the value--of type bool

@@ -19,18 +19,20 @@ int g_count =0;
 void HandDetectioncb(const std_msgs::Bool& result)
 {
   ROS_INFO(" doneCb: server responded with state " );
-/*
+
   if (result.data) // hand is there
   {
       g_my_prevState = g_my_states;
       g_my_states = GOTO_IDLE_WAIT;
       system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_hold.png");
+      ROS_INFO("Hand detection triggered.");
   }
   else 
   {
       g_my_states = g_my_prevState;
       g_my_prevState = g_my_states;
-  }*/
+      ROS_INFO("Hand is not detected.");
+  }
 
 }
 
@@ -54,6 +56,7 @@ int main(int argc, char** argv)
     std_msgs::Int16 int_angle; 
     std::vector<int> myindices;
     block_data myBlockData;
+        system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_orange.png");
 
     // subscribe to Kinect point cloud data  
     CwruPclUtils cwru_pcl_utils(&nh);
