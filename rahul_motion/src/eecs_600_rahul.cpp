@@ -24,6 +24,7 @@ void HandDetectioncb(const std_msgs::Bool& result)
   {
       g_my_prevState = g_my_states;
       g_my_states = GOTO_IDLE_WAIT;
+      system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_hold.png");
   }
   else 
   {

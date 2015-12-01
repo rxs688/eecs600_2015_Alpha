@@ -105,37 +105,37 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_RED;
-		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_red.png");
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_red.png");
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_GREEN[0], 2) + pow(c_avg_g - PERFECT_GREEN[1], 2) + pow(c_avg_b - PERFECT_GREEN[2], 2));
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_GREEN;
-		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_green.png");
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_green.png");
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_BLUE[0], 2) + pow(c_avg_g - PERFECT_BLUE[1], 2) + pow(c_avg_b - PERFECT_BLUE[2], 2));
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_BLUE;
-		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_blue.png");
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_blue.png");
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_WHITE[0], 2) + pow(c_avg_g - PERFECT_WHITE[1], 2) + pow(c_avg_b - PERFECT_WHITE[2], 2));
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_WHITE;
-		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_white.png");
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_white.png");
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_WOOD[0], 2) + pow(c_avg_g - PERFECT_WOOD[1], 2) + pow(c_avg_b - PERFECT_WOOD[2], 2));
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_WOOD;
-		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_wood.png");
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_wood.png");
 	}
 	dist = sqrt(pow(c_avg_r - PERFECT_BLACK[0], 2) + pow(c_avg_g - PERFECT_BLACK[1], 2) + pow(c_avg_b - PERFECT_BLACK[2], 2));
 	if(dist < mindist){
 		mindist = dist;
 		probable_col = BLOCK_BLACK;
-		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/images/baxter_black.png");
+		system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_black.png");
 	}
 	
 	
