@@ -1,18 +1,35 @@
 #include "../include/blockfinder.h"
 #include <vector>
-#include <stdlib.h>
-using namespace std;
+using namespace std; 
 
-Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud, vector<int> &indices)
- {
+void findBlocks(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_pcl_cloud,
+                double ht_ofTable, double ht_ofBlock, const float selectColor[3],
+                vector<int> &output_indices)
+{
+    int size = in_pcl_cloud->width * in_pcl_cloud->height;
+    output_indices.clear();
+	
+    for (size_t i = 0; i != size; ++i)
+    {
+	if ( fabs((ht_ofTable /*This is -ve*/ + ht_ofBlock) - in_pcl_cloud->points[i].z /* This is -ve*/ ) < .01 )
+	{
+	   output_indices.push_back(i);
+	}
+    }
+}
+
+
+Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud,
+                                vector<int> &selected_indices)
+{
     Eigen::Vector3f centroid;
     centroid << 0, 0, 0;
 
-    int size = indices.size();
-    std::cout << "frame: " << pcl_cloud->header.frame_id << "size : " << size << std::endl;
-    for (size_t i = 0; i < size; ++i)
+    int size = selected_indices.size();
+    std::cout << "frame: " << pcl_cloud->header.frame_id << std::endl;
+    for (size_t i = 0; i != size; ++i)
     {
-        centroid += pcl_cloud->points[indices[i]].getVector3fMap();
+        centroid += pcl_cloud->points[selected_indices[i]].getVector3fMap();
     }
     if (size > 0)
     {
@@ -21,24 +38,25 @@ Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud
     return centroid;
 }
 
-void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr subject_cloud, vector<int> &indices)
+void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr subject_cloud, 
+                     vector<int> &selected_indices)
 {
-    int size = indices.size();
-    for(int i = 0; i < size; i++)
+	int size = selected_indices.size();
+	for(int i = 0; i < size; i++)
     {
-	pcl::PointXYZRGB * p = &(subject_cloud->points[indices[i]]);
-	float n = sqrt(pow(p->r, 2) + pow(p->g, 2) + pow(p->b, 2));
-	if(n != 0.0)
+		pcl::PointXYZRGB * p = &(subject_cloud->points[selected_indices[i]]);
+		float n = sqrt(pow(p->r, 2) + pow(p->g, 2) + pow(p->b, 2));
+		if(n != 0.0)
         {
-	    p->r = p->r / n;
-	    p->g = p->g / n;
-	    p->b = p->b / n;
-        }
-    }
+			p->r = p->r / n;
+			p->g = p->g / n;
+			p->b = p->b / n;
+		}
+	}
 }
 
-block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
- {
+block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros::NodeHandle n)
+{
 	//I would recommend prforming blockfinding AFTER we have already checked for a hand stopsignal or other Very High Points.
 	//You will be checking for errors in there first,
 	//so IN THEORY we shouldn't have to worry about them causing false positives here.
@@ -46,38 +64,16 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
 	//Also, since it is very much a point-cloud-related problem, feel free to email/text/whatever
 	//me if you want me to do the outlier checking or anything else for the HMI.
 	
-	float max_z = -DBL_MAX;
-	int npts = inputCloud->width * inputCloud->height;
-	pcl::PointXYZRGB seedpoint;
-	int bcount = 0;
-	
-	for(int i = 0; i < npts; i++)
-        {
-	    if(inputCloud->points[i].z > max_z)
-            {
-		seedpoint = inputCloud->points[i];
-		max_z = seedpoint.z;
-	    }
-	}
-	
-	ROS_INFO("LOCATED BLOCK OF HEIGHT %f.", max_z);
-	
-	//pcl::PointCloud<pcl::PointXYZRGB>::Ptr block_candidate_points(
-        //                                new pcl::PointCloud<pcl::PointXYZRGB>);
-        vector<int> indices;
-        indices.clear();
-	for(int i = 0; i < npts; i++)
-        {
-           if(abs(inputCloud->points[i].z - max_z) < B_EPS)
-           {
-               indices.push_back(i);
-	   }
-	}
-        int npts1 = indices.size();
-	ROS_INFO("No of points saved in Block Count %d ",npts1 );
-	Eigen::Vector3f center = computeCentroid(inputCloud, indices);
-	
-	normalizeColors(inputCloud, indices);
+	vector<int> my_indices;
+	ros::Publisher xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
+
+	findBlocks(inputCloud, -0.15530163 /* Ht of Table */, .075 /* Ht of Block */, PERFECT_RED , my_indices);
+        int npts = my_indices.size();	
+	ROS_INFO("Number of Points %d, LOCATED BLOCK(s) OF HEIGHT .075.",npts);	
+	Eigen::Vector3f center = computeCentroid(inputCloud, my_indices );
+	//normalizeColors(inputCloud, indices);
+	//for(int i = 0; i < npts; i++){
+		
 	
 	float c_avg_r = 0.0;
 	float c_avg_g = 0.0;

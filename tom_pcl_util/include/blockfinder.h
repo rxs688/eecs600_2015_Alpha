@@ -62,4 +62,12 @@ const double CONFUSION_TOLERANCE = 0.5;//Will need to be experimentally tuned.
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
 
+//const double AOI_X = 0.7;
+//const double AOI_Y = 0.0;
+//const double AOI_Z = 
+
+
+
+block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros::NodeHandle n);
+
 #endif
