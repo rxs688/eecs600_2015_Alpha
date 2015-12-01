@@ -25,7 +25,8 @@ enum block_color{
 	BLOCK_BLUE,
 	BLOCK_WHITE,
 	BLOCK_WOOD,
-	BLOCK_BLACK
+	BLOCK_BLACK,
+	BLOCK_CONFUSED
 };
 
 const float PERFECT_RED[3] =	{1.0, 0.0, 0.0};
@@ -57,6 +58,7 @@ struct block_data
 };
 
 const double B_EPS = 0.1;
+const double CONFUSION_TOLERANCE = 0.5;//Will need to be experimentally tuned.
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
 

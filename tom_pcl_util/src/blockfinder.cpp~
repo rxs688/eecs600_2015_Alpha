@@ -100,10 +100,10 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
 	c_avg_g = c_avg_g / bcount;
 	c_avg_b = c_avg_b / bcount;
 	
-	float mindist = CONFUSION_TOLERANCE;
+	float mindist = DBL_MAX;
 	float dist;
 	//int 
-        block_color probable_col = BLOCK_CONFUSED;
+        block_color probable_col;
 	
 	dist = sqrt(pow(c_avg_r - PERFECT_RED[0], 2) + pow(c_avg_g - PERFECT_RED[1], 2) + pow(c_avg_b - PERFECT_RED[2], 2));
 	if(dist < mindist){
