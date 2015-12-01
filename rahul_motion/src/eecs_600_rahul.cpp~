@@ -118,19 +118,6 @@ int main(int argc, char** argv)
                  }
                  ROS_INFO("got a kinect pointcloud");
                  cwru_pcl_utils.transform_kinect_cloud(A_kpc_wrt_torso);
-
-                 while (!cwru_pcl_utils.got_selected_points())
-                 {
-                     ROS_INFO("did not receive pointcloud");
-                    ros::spinOnce();
-                    ros::Duration(1.0).sleep();
-                 }
-
-                 cwru_pcl_utils.transform_selected_points_cloud(A_kpc_wrt_torso);
-                 cwru_pcl_utils.reset_got_selected_points();
-                 cwru_pcl_utils.fit_xformed_selected_pts_to_plane(plane_normal, plane_dist);
-                 slectedCentroid = cwru_pcl_utils.get_centroid();
-                 ROS_INFO ("Centroid : %f, %f, %f ",slectedCentroid[0], slectedCentroid[1], slectedCentroid[2]);  
                  //cwru_pcl_utils.save_kinect_snapshot();     not needed for now
                  //cwru_pcl_utils.save_kinect_clr_snapshot(); not needed for now
                  cwru_pcl_utils.save_transformed_kinect_snapshot();
@@ -153,7 +140,7 @@ int main(int argc, char** argv)
                  //Get the Raw Color Points
                  cwru_pcl_utils.get_kinect_clr_pts(raw_kinect_clr_points);
                  
-                 //Copy the Clr data into the transformed Kinect Datacd 
+                 //Copy the Clr data into the transformed Kinect Data
                  int npts = transformed_kinect_points.points.size();
                  transformed_kinect_clr_points_ptr->points.resize(npts);
                  transformed_kinect_clr_points_ptr->header = transformed_kinect_points.header;
@@ -171,7 +158,7 @@ int main(int argc, char** argv)
                     transformed_kinect_clr_points_ptr->points[i].b = raw_kinect_clr_points.points[i].b;
                  }
                  
-                 myBlockData = find_the_block(transformed_kinect_clr_points_ptr,nh);
+                 myBlockData = find_the_block(transformed_kinect_clr_points_ptr);
                  // Check if there is valid Data in myBlockData
                  //TODO
                  g_my_states = GOTO_CENTROID;

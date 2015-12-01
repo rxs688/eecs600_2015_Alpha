@@ -67,9 +67,9 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 	vector<int> my_indices;
 	ros::Publisher xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
 
-	findBlocks(inputCloud, -0.15530163 /* Ht of Table */, .075 /* Ht of Block */, PERFECT_RED , my_indices);
-        int npts = my_indices.size();	
-	ROS_INFO("Number of Points %d, LOCATED BLOCK(s) OF HEIGHT .075.",npts);	
+	findBlocks(inputCloud, 0.511359 /* Ht of Table */, .02 /* Ht of Block */, PERFECT_RED , my_indices);
+    int npts1 = my_indices.size();	
+	ROS_INFO("Number of Points %d, LOCATED BLOCK(s) OF HEIGHT .075.",npts1);	
 	Eigen::Vector3f center = computeCentroid(inputCloud, my_indices );
 	//normalizeColors(inputCloud, indices);
 	//for(int i = 0; i < npts; i++){
@@ -83,7 +83,7 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 	float xy = 0;
 	for(int i = 0; i < npts1; i++)
         {
-		pcl::PointXYZRGB * p = &(inputCloud->points[indices[i]]);
+		pcl::PointXYZRGB * p = &(inputCloud->points[my_indices[i]]);
 		c_avg_r = c_avg_r + p->r;
 		c_avg_g = c_avg_g + p->g;
 		c_avg_b = c_avg_b + p->b;
@@ -92,9 +92,9 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 		xy = xy + (p->x - center[0]) * (p->y - center[1]);
 	}
 
-	c_avg_r = c_avg_r / bcount;
-	c_avg_g = c_avg_g / bcount;
-	c_avg_b = c_avg_b / bcount;
+	c_avg_r = c_avg_r / npts1;
+	c_avg_g = c_avg_g / npts1;
+	c_avg_b = c_avg_b / npts1;
 	
 	float mindist = CONFUSION_TOLERANCE;
 	float dist;
@@ -168,7 +168,7 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 		out.centroid  = center;
 		out.color_avg = avg_col;
 		out.major_axis = maxis;
-		out.top_plane_z = max_z;
+		out.top_plane_z = center[2];
 		out.color_name = probable_col;
 	
 	return out;
