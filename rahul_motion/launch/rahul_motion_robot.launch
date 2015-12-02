@@ -2,7 +2,8 @@
 <node pkg="baxter_traj_streamer" type="traj_interpolator_as" name="traj_interpolator_as"/>
 <node pkg="baxter_cartesian_moves" type="baxter_cart_move_as" name="baxter_cart_move_as"/>
 <node pkg="kristina_hmi" type="hand_detect_publisher" name="hand_detect_publisher"/>
-<node pkg="marc_gripper" type="gripper_motor_node" name="gripper_motor_node"/>
+<node pkg="baxter_gripper" type="dynamixel_motor_node" name="dynamixel_motor_node"/>
+<node pkg="baxter_gripper" type="baxter_compliant_gripper" name="baxter_compliant_gripper"/>
 <node pkg="rviz" type="rviz" name="rviz"/>
 
 <include file ="$(find cwru_baxter_launch)/kinect.launch"/>

@@ -14,24 +14,28 @@
 using namespace std;
 int g_my_states = GOTO_PREPOSE_INIT;
 int g_my_prevState = g_my_states;
+bool hand_state_saved = 0;
 int g_count =0;
 
 void HandDetectioncb(const std_msgs::Bool& result)
 {
-  ROS_INFO(" doneCb: server responded with state " );
-
-  if (result.data) // hand is there
+  ROS_INFO("HandDetectioncb: server responded " );
+  if (result.data !=  hand_state_saved) 
   {
-      g_my_prevState = g_my_states;
-      g_my_states = GOTO_IDLE_WAIT;
-      system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_hold.png");
-      ROS_INFO("Hand detection triggered.");
-  }
-  else 
-  {
-      g_my_states = g_my_prevState;
-      g_my_prevState = g_my_states;
-      ROS_INFO("Hand is not detected.");
+      if (result.data) // hand is there
+      {
+         g_my_prevState = g_my_states;
+         g_my_states = GOTO_IDLE_WAIT;
+         system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_hold.png");
+         ROS_INFO("Hand detection triggered.");
+      }
+      else 
+      {
+          g_my_states = g_my_prevState;
+          g_my_prevState = g_my_states;
+          ROS_INFO("Hand is not detected.");
+      }
+      hand_state_saved = result.data;
   }
 
 }
@@ -41,19 +45,14 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "eecs600_Alpha"); //node name
     ros::NodeHandle nh;
-    cwru_action::trajGoal goal;  
     tf::StampedTransform tf_kpc_to_torso_frame; //transform sensor frame to torso frame
     tf::TransformListener tf_listener;          //start a transform listener
     bool tferr = true;
-    char cmd_topic_name[50];
-    int motor_id=1; 
-
     Eigen::Vector3f plane_normal, slectedCentroid;
     Eigen::Vector3d dp_displacement;
     geometry_msgs::PoseStamped rt_tool_pose;
     double plane_dist, dpp= .01;
     int rtn_val;
-    std_msgs::Int16 int_angle; 
     std::vector<int> myindices;
     block_data myBlockData;
         system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_orange.png");
@@ -63,8 +62,8 @@ int main(int argc, char** argv)
     ArmMotionCommander arm_motion_commander(&nh);
 
     //------Publish to the Gripper listner-----------------
-    sprintf(cmd_topic_name,"dynamixel_motor%d_cmd",motor_id);
-    ros::Publisher dyn_pub = nh.advertise<std_msgs::Int16>(cmd_topic_name, 1);
+    ros::Publisher gripper_cmd = nh.advertise< std_msgs::Bool>("gripper_cmd", 1);
+    // Listen to Hand detection Messages
     ros::Subscriber my_subscriber_object= nh.subscribe("hand_detected",1,HandDetectioncb); 
 
     // Wait for cart move action client to initialize
@@ -208,10 +207,9 @@ int main(int argc, char** argv)
             case PICKUP_BLOCK:
             {
                ROS_INFO("State : PICKUP_BLOCK"); 
-               // Open the Gripper 
-               int_angle.data = 3000;
-               ROS_INFO("sending open command");
-               dyn_pub.publish(int_angle); 
+               std_msgs::Bool close_grip;
+               close_grip.data = 1;
+               gripper_cmd.publish(close_grip); 
                ros::Duration(1.0).sleep(); // sleep for half a second
 
                //go down by dp value
@@ -223,9 +221,9 @@ int main(int argc, char** argv)
                   rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
                }
                 // Close the Gripper
-               int_angle.data = 3800;
                ROS_INFO("sending Close command");
-               dyn_pub.publish(int_angle); 
+               close_grip.data = 0;
+               gripper_cmd.publish(close_grip); 
                ros::Duration(1.0).sleep(); // sleep for half a second
                g_my_states = MOVE_BLOCK; 
                break;
@@ -248,9 +246,9 @@ int main(int argc, char** argv)
             case DROP_BLOCK:
              {
                  // Open the Gripper
-                 int_angle.data = 3000;
-                 ROS_INFO("sending open command");
-                 dyn_pub.publish(int_angle); 
+                 std_msgs::Bool close_grip;
+                  close_grip.data = 0;
+                  gripper_cmd.publish(close_grip); 
                  ros::Duration(1.0).sleep(); // sleep for half a second
                  g_my_states = GOTO_PREPOSE_FINAL; 
                  break;
