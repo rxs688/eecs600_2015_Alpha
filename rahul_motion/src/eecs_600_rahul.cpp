@@ -123,7 +123,7 @@ int main(int argc, char** argv)
                  ROS_INFO("got a kinect pointcloud");
                  cwru_pcl_utils.transform_kinect_cloud(A_kpc_wrt_torso);
 
-                 while (!cwru_pcl_utils.got_selected_points())
+                 /*while (!cwru_pcl_utils.got_selected_points())
                  {
                      ROS_INFO("did not receive pointcloud");
                     ros::spinOnce();
@@ -136,7 +136,7 @@ int main(int argc, char** argv)
                  slectedCentroid = cwru_pcl_utils.get_centroid();
                  ROS_INFO ("Centroid : %f, %f, %f ",slectedCentroid[0], slectedCentroid[1], slectedCentroid[2]);  
                  //cwru_pcl_utils.save_kinect_snapshot();     not needed for now
-                 //cwru_pcl_utils.save_kinect_clr_snapshot(); not needed for now
+                 //cwru_pcl_utils.save_kinect_clr_snapshot(); not needed for now */
                  cwru_pcl_utils.save_transformed_kinect_snapshot();
                  g_my_states = COMPUTE_CENTROID;
                  break;
@@ -146,6 +146,7 @@ int main(int argc, char** argv)
             case COMPUTE_CENTROID:
             {
                  ROS_INFO("State : COMPUTE_CENTROID"); 
+                 std::vector< int > my_index ;
                  // Tranform wrt to torso
                  pcl::PointCloud<pcl::PointXYZ> transformed_kinect_points;
                  pcl::PointCloud<pcl::PointXYZRGB> raw_kinect_clr_points;
@@ -156,23 +157,28 @@ int main(int argc, char** argv)
                  cwru_pcl_utils.get_transformed_kinect_points(transformed_kinect_points);
                  //Get the Raw Color Points
                  cwru_pcl_utils.get_kinect_clr_pts(raw_kinect_clr_points);
-                 
+                 // Remove NAN points  
+                 pcl::removeNaNFromPointCloud 	( transformed_kinect_points,my_index ) ;
+
                  //Copy the Clr data into the transformed Kinect Datacd 
                  int npts = transformed_kinect_points.points.size();
-                 transformed_kinect_clr_points_ptr->points.resize(npts);
+                 int npts1 = my_index.size();
+                 ROS_INFO(" Points befor NAN removal %d, After NAN Removal: %d",npts, npts1);
+
+                 transformed_kinect_clr_points_ptr->points.resize(npts1);
                  transformed_kinect_clr_points_ptr->header = transformed_kinect_points.header;
                  transformed_kinect_clr_points_ptr->is_dense = transformed_kinect_points.is_dense;
-                 transformed_kinect_clr_points_ptr->width = npts;
+                 transformed_kinect_clr_points_ptr->width = npts1;
                  transformed_kinect_clr_points_ptr->height = 1;
 
                  cout << "copying color data npts =" << npts << endl;
-                 for (int i = 0; i < npts; ++i)
+                 for (int i = 0; i < npts1; ++i)
                  {
                     transformed_kinect_clr_points_ptr->points[i].getVector3fMap() = 
-                                       transformed_kinect_points.points[i].getVector3fMap();
-                    transformed_kinect_clr_points_ptr->points[i].r = raw_kinect_clr_points.points[i].r;
-                    transformed_kinect_clr_points_ptr->points[i].g = raw_kinect_clr_points.points[i].g;
-                    transformed_kinect_clr_points_ptr->points[i].b = raw_kinect_clr_points.points[i].b;
+                                       transformed_kinect_points.points[my_index[i]].getVector3fMap();
+                    transformed_kinect_clr_points_ptr->points[i].r = raw_kinect_clr_points.points[my_index[i]].r;
+                    transformed_kinect_clr_points_ptr->points[i].g = raw_kinect_clr_points.points[my_index[i]].g;
+                    transformed_kinect_clr_points_ptr->points[i].b = raw_kinect_clr_points.points[my_index[i]].b;
                  }
                  
                  myBlockData = find_the_block(transformed_kinect_clr_points_ptr,nh);
