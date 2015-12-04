@@ -24,7 +24,7 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
         tferr = false;
         try
         {
-            tf_listener.lookupTransform("torso","kinect_pc_frame", 
+            tf_listener.lookupTransform("torso","camera_rgb_optical_frame", 
                                         ros::Time(0), 
                                         tf_kpc_to_torso_frame);
         }
