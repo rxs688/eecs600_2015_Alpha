@@ -11,10 +11,25 @@ void findBlocks(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_pcl_cloud,
 	
     for (size_t i = 0; i != size; ++i)
     {
-	if ( fabs((ht_ofTable /*This is -ve*/ + ht_ofBlock) - in_pcl_cloud->points[i].z /* This is -ve*/ ) < .01 )
-	{
-	   output_indices.push_back(i);
-	}
+        if(fabs(ht_ofTable - in_pcl_cloud->points[i].z) < .05)
+        {
+    	    float compute_Data = (ht_ofTable + ht_ofBlock) - in_pcl_cloud->points[i].z;
+            float z_value = in_pcl_cloud->points[i].z;
+            //ROS_INFO("FindBlockData, Ht: %f , Z Value : %f, ComputeData : %f",ht_ofTable, z_value, compute_Data);
+	    if ( fabs((ht_ofTable /*This is -ve*/ + ht_ofBlock) - in_pcl_cloud->points[i].z /* This is -ve*/ ) < .01 )
+	    {
+              float R = in_pcl_cloud->points[i].r;
+              float G = in_pcl_cloud->points[i].g;
+              float B = in_pcl_cloud->points[i].b;
+              ROS_INFO("Color value of Points : %f, %f, %f", R, G, B);
+              if ((fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 70) &&
+                  (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 250) &&
+                  (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 250))
+              {
+	         output_indices.push_back(i);
+              }
+	    }
+        }
     }
 }
 
@@ -67,9 +82,9 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 	vector<int> my_indices;
 	ros::Publisher xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
 
-	findBlocks(inputCloud, 0.511359 /* Ht of Table */, .02 /* Ht of Block */, PERFECT_RED , my_indices);
-    int npts1 = my_indices.size();	
-	ROS_INFO("Number of Points %d, LOCATED BLOCK(s) OF HEIGHT .075.",npts1);	
+	findBlocks(inputCloud, -0.17377718 /* Ht of Table */, .03 /* Ht of Block */, PERFECT_RED , my_indices);
+        int npts1 = my_indices.size();	
+	ROS_INFO("Number of Points %d, LOCATED BLOCK(s) OF HEIGHT .02.",npts1);	
 	Eigen::Vector3f center = computeCentroid(inputCloud, my_indices );
 	//normalizeColors(inputCloud, indices);
 	//for(int i = 0; i < npts; i++){
