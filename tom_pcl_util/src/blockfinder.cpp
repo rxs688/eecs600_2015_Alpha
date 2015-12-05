@@ -95,11 +95,16 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 	//me if you want me to do the outlier checking or anything else for the HMI.
 	
 	vector<int> my_indices;
+        block_color foundBlockColor = BLOCK_CONFUSED;
 	ros::Publisher xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
         for ( int ii =BLOCK_RED; ii < BLOCK_CONFUSED; ii++)
         {  
 	    findBlocks(inputCloud, -0.17377718 /* Ht of Table */, .03 /* Ht of Block */, (block_color)ii , my_indices);
-            if(my_indices.size() > 0) break;
+            if(my_indices.size() > 0)
+            {
+                foundBlockColor = (block_color)ii;
+                break;
+            } 
         } 
 	int npts1 = my_indices.size();
 	ROS_INFO("Number of Points %d, LOCATED BLOCK(s) OF HEIGHT .02.",npts1);	
@@ -202,7 +207,7 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 		out.color_avg = avg_col;
 		out.major_axis = maxis;
 		out.top_plane_z = center[2];
-		out.color_name = probable_col;
+		out.color_name = foundBlockColor;//probable_col;
 	
 	return out;
 }
