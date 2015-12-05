@@ -191,12 +191,16 @@ int main(int argc, char** argv)
                 ROS_INFO("State : GOTO_CENTROID"); 
                 rtn_val = arm_motion_commander.rt_arm_request_tool_pose_wrt_torso();
                 rt_tool_pose = arm_motion_commander.get_rt_tool_pose_stamped();
+                //Adding Offsets
+                //myBlockData.centroid[0] = myBlockData.centroid[0]+.2;
+                //myBlockData.centroid[1] = myBlockData.centroid[1]-.08;
                 //alter the tool pose:
                 // Be a little above the Centroid
                 ROS_INFO ("Centroid : %f, %f, %f ",myBlockData.centroid[0], myBlockData.centroid[1], myBlockData.centroid[2]);  
-                rt_tool_pose.pose.position.z = myBlockData.centroid[2]-0.10; 
-                rt_tool_pose.pose.position.x = myBlockData.centroid[0];
-                rt_tool_pose.pose.position.y = myBlockData.centroid[1];
+                 
+                rt_tool_pose.pose.position.x = myBlockData.centroid[0];//0.573503;
+                rt_tool_pose.pose.position.y = myBlockData.centroid[1];//-0.181500;
+                rt_tool_pose.pose.position.z = myBlockData.centroid[2]+.05; //-0.015773;
                 // send move plan request:
                 rtn_val=arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
                 //send command to execute planned motion
