@@ -20,7 +20,7 @@
 #define PCL_BLOCKFIND_H_
 
 enum block_color{
-	BLOCK_RED,
+	BLOCK_RED = 0,
 	BLOCK_GREEN,
 	BLOCK_BLUE,
 	BLOCK_WHITE,
@@ -36,7 +36,7 @@ const float PERFECT_WHITE[3] =	{1.0, 1.0, 1.0};
 const float PERFECT_WOOD[3] =	{1.0, 1.0, 0.0};
 const float PERFECT_BLACK[3] =	{0.0, 0.0, 0.0};
 
-const float PERFECT_COLORS[6][3] = {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {1.0, 1.0, 0.0}, {0.0, 0.0, 0.0}};
+const float PERFECT_COLORS[6][3] = {{255, 0.0, 0.0}, {0.0, 255, 0.0}, {0.0, 0.0, 255}, {255, 255, 255}, {1.0, 1.0, 0.0}, {0.0, 0.0, 0.0}};
 
 ros::Publisher xdisplay_pub;
 sensor_msgs::ImagePtr baxter_red, baxter_yellow, baxter_blue;
