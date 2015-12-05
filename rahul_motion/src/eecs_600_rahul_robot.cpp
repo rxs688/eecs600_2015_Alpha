@@ -192,15 +192,15 @@ int main(int argc, char** argv)
                 rtn_val = arm_motion_commander.rt_arm_request_tool_pose_wrt_torso();
                 rt_tool_pose = arm_motion_commander.get_rt_tool_pose_stamped();
                 //Adding Offsets
-                //myBlockData.centroid[0] = myBlockData.centroid[0]+.2;
-                //myBlockData.centroid[1] = myBlockData.centroid[1]-.08;
+                myBlockData.centroid[0] = myBlockData.centroid[0]+.061;
+                myBlockData.centroid[1] = myBlockData.centroid[1]-.009;
                 //alter the tool pose:
                 // Be a little above the Centroid
                 ROS_INFO ("Centroid : %f, %f, %f ",myBlockData.centroid[0], myBlockData.centroid[1], myBlockData.centroid[2]);  
                  
                 rt_tool_pose.pose.position.x = myBlockData.centroid[0];//0.573503;
                 rt_tool_pose.pose.position.y = myBlockData.centroid[1];//-0.181500;
-                rt_tool_pose.pose.position.z = myBlockData.centroid[2]+.05; //-0.015773;
+                rt_tool_pose.pose.position.z = myBlockData.centroid[2]+.15; //-0.015773;
                 // send move plan request:
                 rtn_val=arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
                 //send command to execute planned motion
@@ -217,7 +217,7 @@ int main(int argc, char** argv)
                ros::Duration(1.0).sleep(); // sleep for half a second
 
                //go down by dp value
-               dp_displacement<< 0,0,0.25;
+               dp_displacement<< 0,0,.25;
                rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_dp_xyz(dp_displacement);
                if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS)
                { 
