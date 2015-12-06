@@ -12,6 +12,7 @@ int main(int argc, char **argv)
 ros::NodeHandle n; // two lines to create a publisher object that can talk to ROS
     CwruPclUtils cwru_pcl_utils(&n); //Subscribe to Kinect cloud
     double hand_height;
+    double point_count=0;
 
     tf::StampedTransform tf_kpc_to_torso_frame; //transform sensor frame to torso frame
     tf::TransformListener tf_listener;          //start a transform listener
@@ -89,8 +90,13 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
                 seedpoint = transformed_kinect_points.points[i];
                 max_z = seedpoint.z;
           }
+          if(max_z>hand_height){
+          point_count=point_count+1;
+          ROS_INFO("%d points at hand height detected.", point_count);
+          }
       }
-      if(max_z>hand_height){
+
+      if(point_count>1000){ // will set number based on RVIZ output  
         hand_detected.data=true;
         ROS_INFO("SELECTED POINT %f", seedpoint.z);
       } else {hand_detected.data=false;}
