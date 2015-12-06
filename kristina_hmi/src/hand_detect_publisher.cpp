@@ -1,5 +1,4 @@
 
-}
 #include <ros/ros.h>
 #include <stdio.h>
 #include <std_msgs/Bool.h>
@@ -14,7 +13,6 @@ int main(int argc, char **argv)
 ros::NodeHandle n; // two lines to create a publisher object that can talk to ROS
     CwruPclUtils cwru_pcl_utils(&n); //Subscribe to Kinect cloud
     double hand_height;
-    double point_count=0;
 
     tf::StampedTransform tf_kpc_to_torso_frame; //transform sensor frame to torso frame
     tf::TransformListener tf_listener;          //start a transform listener
@@ -57,57 +55,57 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
 
     hand_height=.25; //TODO: Set value for height at which hand is considered detected. 
 
-    while (ros::ok())
-    {
-        
-                 while (!cwru_pcl_utils.got_kinect_cloud())
-                 {
-                    ROS_INFO("did not receive pointcloud");
-                    ros::spinOnce();
-                    ros::Duration(1.0).sleep();
-                 }
-                 ROS_INFO("got a kinect pointcloud");
-                 cwru_pcl_utils.transform_kinect_cloud(A_kpc_wrt_torso);
-                 //cwru_pcl_utils.save_kinect_snapshot();     not needed for now
-                 //cwru_pcl_utils.save_kinect_clr_snapshot(); not needed for now
-                 //cwru_pcl_utils.save_transformed_kinect_snapshot();
+    while (ros::ok()){
+		while (!cwru_pcl_utils.got_kinect_cloud()){
+			//ROS_INFO("did not receive pointcloud");
+ 			ros::spinOnce();
+			ros::Duration(1.0).sleep();
+		}
+		//ROS_INFO("got a kinect pointcloud");
+		int point_count=0;
+		cwru_pcl_utils.transform_kinect_cloud(A_kpc_wrt_torso);
+		//cwru_pcl_utils.save_kinect_snapshot();     not needed for now
+		//cwru_pcl_utils.save_kinect_clr_snapshot(); not needed for now
+		//cwru_pcl_utils.save_transformed_kinect_snapshot();
                  
             
-                 // Tranform wrt to torso
-                 pcl::PointCloud<pcl::PointXYZ> transformed_kinect_points;
+		// Tranform wrt to torso
+		pcl::PointCloud<pcl::PointXYZ> transformed_kinect_points;
 
-                 // Get the Transfromed Kinect point Cloud
-                 cwru_pcl_utils.get_transformed_kinect_points(transformed_kinect_points); //Point cloud
-                   // this loop has no sleep timer, and thus it will consume excessive CPU time
+		// Get the Transfromed Kinect point Cloud
+		cwru_pcl_utils.get_transformed_kinect_points(transformed_kinect_points); //Point cloud
+		// this loop has no sleep timer, and thus it will consume excessive CPU time
         // expect one core to be 100% dedicated (wastefully) to this small task
-      float max_z = -DBL_MAX;
-      int npts = transformed_kinect_points.width * transformed_kinect_points.height;
-      pcl::PointXYZ seedpoint;
-      int bcount = 0;
+
+        cwru_pcl_utils.reset_got_kinect_cloud();
+
+		float max_z = -DBL_MAX;
+		int npts = transformed_kinect_points.width * transformed_kinect_points.height;
+		pcl::PointXYZ seedpoint;
+		int bcount = 0;
       
-      for(int i = 0; i < npts; i++)
-            {
-          if(transformed_kinect_points.points[i].z > max_z)
-                {
-                seedpoint = transformed_kinect_points.points[i];
-                max_z = seedpoint.z;
-          }
-          if(max_z>hand_height){
-          point_count=point_count+1;
-          ROS_INFO("%d points at hand height detected.", point_count);
-          }
-      }
-
-      if(point_count>1000){ // will set number based on RVIZ output  
+		for(int i = 0; i < npts; i++){
+			/*if(transformed_kinect_points.points[i].z > max_z){
+                	seedpoint = transformed_kinect_points.points[i];
+                	max_z = seedpoint.z;
+          	}*/
+			if(transformed_kinect_points.points[i].z > hand_height){
+          				point_count++;
+          				
+          	}
+      	}
+		//ROS_INFO("%i points at hand height detected.", point_count);
+      if(point_count>1500){ // will set number based on RVIZ output  
         hand_detected.data=true;
-        ROS_INFO("SELECTED POINT %f", seedpoint.z);
-      } else {hand_detected.data=false;}
-        
-
+        //ROS_INFO("SELECTED POINT %f", seedpoint.z);
+      }
+      else {hand_detected.data=false;}
+      ROS_INFO("												Hand detected is %i", hand_detected.data);
         my_publisher_object.publish(hand_detected); // publish the value--of type bool
         //to the topic "topic1"
   //the next line will cause the loop to sleep for the balance of the desired period 
         // to achieve the specified loop frequency 
   naptime.sleep();
   ros::spinOnce();
+	}
 }
