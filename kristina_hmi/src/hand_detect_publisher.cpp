@@ -47,7 +47,7 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
     // any message published on a ROS topic must have a pre-defined format, 
     // so subscribers know how to interpret the serialized data transmission
    
-   ros::Rate naptime(100.0); //create a ros object from the ros “Rate” class; 
+   ros::Rate naptime(50.0); //create a ros object from the ros “Rate” class; 
    //set the sleep timer for 100Hz repetition rate (arg is in units of Hz)
 
     hand_detected.data = false;
@@ -59,7 +59,7 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
 		while (!cwru_pcl_utils.got_kinect_cloud()){
 			//ROS_INFO("did not receive pointcloud");
  			ros::spinOnce();
-			ros::Duration(1.0).sleep();
+			ros::Duration(0.5).sleep();
 		}
 		//ROS_INFO("got a kinect pointcloud");
 		int point_count=0;

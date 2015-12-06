@@ -80,7 +80,7 @@ public:
     void transform_selected_points_cloud(Eigen::Affine3f A);
     void transform_cloud(Eigen::Affine3f A,pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr, 
         pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud_ptr);    
-    void reset_got_kinect_cloud() {got_kinect_cloud_= false;};
+    void reset_got_kinect_cloud() {got_kinect_cloud_= false;}
     void reset_got_selected_points() {got_selected_points_= false;};    
     bool got_kinect_cloud() { return got_kinect_cloud_; };
     bool got_selected_points() {return got_selected_points_;};

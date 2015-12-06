@@ -1,4 +1,3 @@
-Note: The screen images require baxter_examples in order to run. 
 
 To run in Gazebo/RViz:
 `roslaunch cwru_baxter_sim baxter_world.launch` 
