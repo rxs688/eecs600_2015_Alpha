@@ -46,6 +46,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "eecs600_Alpha"); //node name
     ros::NodeHandle nh;
     tf::StampedTransform tf_kpc_to_torso_frame; //transform sensor frame to torso frame
+    tf::StampedTransform tf_right_hand_wrt_torso;
     tf::TransformListener tf_listener;          //start a transform listener
     bool tferr = true;
     Eigen::Vector3f plane_normal, slectedCentroid;
@@ -93,6 +94,26 @@ int main(int argc, char** argv)
     ROS_INFO("tf is good"); 
     //convert the tf to an Eigen::Affine:
     Eigen::Affine3f A_kpc_wrt_torso = cwru_pcl_utils.transformTFToEigen(tf_kpc_to_torso_frame);
+    
+    
+    tferr = true;
+    ROS_INFO("waiting for tf between yale gripper frame and torso...");
+    while (tferr)
+    {
+        tferr = false;
+        try
+        {
+            tf_listener.lookupTransform("torso", "yale_gripper_frame", ros::Time(0), tf_right_hand_wrt_torso);
+
+        } catch (tf::TransformException &exception) {
+            ROS_WARN("%s", exception.what());
+            tferr = true;
+            ros::Duration(0.1).sleep(); // sleep briefly
+            ros::spinOnce();
+        }
+    }
+    ROS_INFO("got gripper tf");
+    Eigen::Affine3f A_yale_wrt_torso = cwru_pcl_utils.transformTFToEigen(tf_right_hand_wrt_torso);
 
     while (ros::ok())
     {
@@ -189,18 +210,23 @@ int main(int argc, char** argv)
             case GOTO_CENTROID:
             { 
                 ROS_INFO("State : GOTO_CENTROID"); 
+                Eigen::Vector3f yalePosition;
                 rtn_val = arm_motion_commander.rt_arm_request_tool_pose_wrt_torso();
                 rt_tool_pose = arm_motion_commander.get_rt_tool_pose_stamped();
-                //Adding Offsets
-                myBlockData.centroid[0] = myBlockData.centroid[0]+.061;
-                myBlockData.centroid[1] = myBlockData.centroid[1]-.009;
+
+                yalePosition = A_yale_wrt_torso * myBlockData.centroid;
+                ROS_INFO ("Centroid : %f, %f, %f ",myBlockData.centroid[0], myBlockData.centroid[1], myBlockData.centroid[2]); 
+                ROS_INFO ("Gripper : %f, %f, %f ",yalePosition [0], yalePosition [1],yalePosition [2]);
+                 //Adding Offsets
+                myBlockData.centroid[0] = myBlockData.centroid[0]+.0605;
+                myBlockData.centroid[1] = myBlockData.centroid[1]-.079;
+                ROS_INFO ("Centroid_offsets : %f, %f, %f ",myBlockData.centroid[0], myBlockData.centroid[1], myBlockData.centroid[2]); 
                 //alter the tool pose:
-                // Be a little above the Centroid
-                ROS_INFO ("Centroid : %f, %f, %f ",myBlockData.centroid[0], myBlockData.centroid[1], myBlockData.centroid[2]);  
+                // Be a little above the Centroid 
                  
                 rt_tool_pose.pose.position.x = myBlockData.centroid[0];//0.573503;
                 rt_tool_pose.pose.position.y = myBlockData.centroid[1];//-0.181500;
-                rt_tool_pose.pose.position.z = myBlockData.centroid[2]+.15; //-0.015773;
+                rt_tool_pose.pose.position.z = myBlockData.centroid[2]+.141; //-0.015773;
                 // send move plan request:
                 rtn_val=arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
                 //send command to execute planned motion
@@ -214,21 +240,34 @@ int main(int argc, char** argv)
                std_msgs::Bool close_grip;
                close_grip.data = 1;
                gripper_cmd.publish(close_grip); 
-               ros::Duration(1.0).sleep(); // sleep for half a second
-
-               //go down by dp value
-               dp_displacement<< 0,0,.25;
+               ros::Duration(2.1).sleep(); // sleep for half a second
+               if(myBlockData.color_name == BLOCK_RED)
+               {
+                   ROS_INFO("PICKUP_BLOCK RED ");
+                   //go down by dp value
+                   dp_displacement<< 0,.25,.25;
+               }
+               else if(myBlockData.color_name == BLOCK_GREEN)
+               {
+                   ROS_INFO("PICKUP_BLOCK GREEN ");
+                   dp_displacement<< .25,0,.25;
+               }
+               else if( myBlockData.color_name == BLOCK_BLUE)
+               {
+                   ROS_INFO("PICKUP_BLOCK BLUE ");
+                   dp_displacement<< .25,.25,.25;
+               }  
                rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_dp_xyz(dp_displacement);
                if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS)
                { 
                   //send command to execute planned motion
                   rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
                }
-                // Close the Gripper
-               ROS_INFO("sending Close command");
+                //Open the Gripper
+               ROS_INFO("sending open command");
                close_grip.data = 0;
                gripper_cmd.publish(close_grip); 
-               ros::Duration(1.0).sleep(); // sleep for half a second
+               ros::Duration(2.0).sleep(); // sleep for half a second
                g_my_states = MOVE_BLOCK; 
                break;
             }

@@ -29,18 +29,39 @@ void findBlocks(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_pcl_cloud,
                   switch (ColorSelected)
                   {
                      case BLOCK_RED : 
-                          if (fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 70) 
+                          if ((fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 70) &&
+                              (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 150)&&
+                              (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 150))
+                          {
                              output_indices.push_back(i);
+                          }
                           break;
 
                      case BLOCK_GREEN : 
-                          if (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 70) 
+                          if ( (fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 170)&&
+                               (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 60)&&
+                               (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 170))
+                          {
                               output_indices.push_back(i);
+                          }
                           break;
 
                      case BLOCK_BLUE : 
-                          if (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 70)
+                          if ( (fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 170)&&
+                               (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 170)&&
+                               (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 60))
+                          {
                               output_indices.push_back(i);
+                          }
+                          break;
+
+                    case BLOCK_WHITE : 
+                          if ( (fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 60)&&
+                               (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 60)&&
+                               (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 60))
+                          {
+                              output_indices.push_back(i);
+                          }
                           break;
                   }
 	    }
@@ -84,6 +105,7 @@ void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr subject_cloud,
 		}
 	}
 }
+
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros::NodeHandle n)
 {

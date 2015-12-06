@@ -32,7 +32,7 @@ enum block_color{
 const float PERFECT_RED[3] =	{255, 0.0, 0.0};
 const float PERFECT_GREEN[3] =	{0.0, 255, 0.0};
 const float PERFECT_BLUE[3] =	{0.0, 0.0, 255};
-const float PERFECT_WHITE[3] =	{1.0, 1.0, 1.0};
+const float PERFECT_WHITE[3] =	{255, 255, 255};
 const float PERFECT_WOOD[3] =	{1.0, 1.0, 0.0};
 const float PERFECT_BLACK[3] =	{0.0, 0.0, 0.0};
 
