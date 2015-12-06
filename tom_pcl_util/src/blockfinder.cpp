@@ -3,31 +3,46 @@
 using namespace std; 
 
 void findBlocks(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_pcl_cloud,
-                double ht_ofTable, double ht_ofBlock, const float selectColor[3],
+                double ht_ofTable, double ht_ofBlock, block_color ColorSelected ,
                 vector<int> &output_indices)
 {
     int size = in_pcl_cloud->width * in_pcl_cloud->height;
     output_indices.clear();
+    const float* selectColor = PERFECT_COLORS[ColorSelected];
 	
-    for (size_t i = 0; i != size; ++i)
+    for (size_t i = 0; i < size; ++i)
     {
-        if(fabs(ht_ofTable - in_pcl_cloud->points[i].z) < .05)
+        // Assuming ht of block is no more than 10 cm
+        if(fabs(ht_ofTable - in_pcl_cloud->points[i].z) < .10)
         {
-    	    float compute_Data = (ht_ofTable + ht_ofBlock) - in_pcl_cloud->points[i].z;
-            float z_value = in_pcl_cloud->points[i].z;
-            //ROS_INFO("FindBlockData, Ht: %f , Z Value : %f, ComputeData : %f",ht_ofTable, z_value, compute_Data);
-	    if ( fabs((ht_ofTable /*This is -ve*/ + ht_ofBlock) - in_pcl_cloud->points[i].z /* This is -ve*/ ) < .01 )
+            float Z = in_pcl_cloud->points[i].z;
+            float C1 = selectColor[0];
+            float C2 = selectColor[1];
+            float C3 = selectColor[2];
+            float R = in_pcl_cloud->points[i].r;
+            float G = in_pcl_cloud->points[i].g;
+            float B = in_pcl_cloud->points[i].b;
+            ROS_INFO("Point Z = %f, RGBPt= %f,%f,%f  SelPt=%f,%f,%f", Z,R,G,B,C1,C2,C3);
+
+	    if ( fabs((ht_ofTable  + ht_ofBlock) - in_pcl_cloud->points[i].z ) < .01 )
 	    {
-              float R = in_pcl_cloud->points[i].r;
-              float G = in_pcl_cloud->points[i].g;
-              float B = in_pcl_cloud->points[i].b;
-              ROS_INFO("Color value of Points : %f, %f, %f", R, G, B);
-              if ((fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 70) &&
-                  (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 250) &&
-                  (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 250))
-              {
-	         output_indices.push_back(i);
-              }
+                  switch (ColorSelected)
+                  {
+                     case BLOCK_RED : 
+                          if (fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 70) 
+                             output_indices.push_back(i);
+                          break;
+
+                     case BLOCK_GREEN : 
+                          if (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 70) 
+                              output_indices.push_back(i);
+                          break;
+
+                     case BLOCK_BLUE : 
+                          if (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 70)
+                              output_indices.push_back(i);
+                          break;
+                  }
 	    }
         }
     }
@@ -80,10 +95,18 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 	//me if you want me to do the outlier checking or anything else for the HMI.
 	
 	vector<int> my_indices;
+        block_color foundBlockColor = BLOCK_CONFUSED;
 	ros::Publisher xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
-
-	findBlocks(inputCloud, -0.17377718 /* Ht of Table */, .03 /* Ht of Block */, PERFECT_RED , my_indices);
-        int npts1 = my_indices.size();	
+        for ( int ii =BLOCK_RED; ii < BLOCK_CONFUSED; ii++)
+        {  
+	    findBlocks(inputCloud, -0.17377718 /* Ht of Table */, .03 /* Ht of Block */, (block_color)ii , my_indices);
+            if(my_indices.size() > 0)
+            {
+                foundBlockColor = (block_color)ii;
+                break;
+            } 
+        } 
+	int npts1 = my_indices.size();
 	ROS_INFO("Number of Points %d, LOCATED BLOCK(s) OF HEIGHT .02.",npts1);	
 	Eigen::Vector3f center = computeCentroid(inputCloud, my_indices );
 	//normalizeColors(inputCloud, indices);
@@ -184,7 +207,7 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 		out.color_avg = avg_col;
 		out.major_axis = maxis;
 		out.top_plane_z = center[2];
-		out.color_name = probable_col;
+		out.color_name = foundBlockColor;//probable_col;
 	
 	return out;
 }
