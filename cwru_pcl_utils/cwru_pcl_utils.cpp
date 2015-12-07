@@ -360,9 +360,9 @@ Eigen::Vector3d CwruPclUtils::find_avg_color() {
         indices_.push_back(i); // save this points as "interesting" color
     }
     }
-    //ROS_INFO("found %d points with interesting color",npts_colored);
+    ROS_INFO("found %d points with interesting color",npts_colored);
     avg_color/=npts_colored;
-    //ROS_INFO("avg interesting color = %f, %f, %f",avg_color(0),avg_color(1),avg_color(2));
+    ROS_INFO("avg interesting color = %f, %f, %f",avg_color(0),avg_color(1),avg_color(2));
     return avg_color;
  
 }

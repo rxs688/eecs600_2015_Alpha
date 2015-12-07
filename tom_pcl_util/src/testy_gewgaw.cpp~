@@ -1,0 +1,6 @@
+#include "blockfinder.cpp"
+
+int main(int argc, char **argv){
+	printf("ready to test stuff\n");
+	return 0;
+}

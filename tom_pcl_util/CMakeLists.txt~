@@ -7,13 +7,13 @@ include_directories(${PCL_INCLUDE_DIRS})
 
 #looks like Eigen3 works, but Eigen does not!
 find_package(Eigen3 REQUIRED)
-include_directories(${Eigen3_INCLUDE_DIRS})
+include_directories(${Eigen3_INCLUDE_DIRS} cwru_pcl_utils)
 add_definitions(${EIGEN_DEFINITIONS})
 
 catkin_simple()
 
 # example boost usage
-find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Boost REQUIRED COMPONENTS system thread cwru_pcl_utils)
 
 # C++0x support - not quite the same as final C++11!
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")

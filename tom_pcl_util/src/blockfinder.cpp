@@ -2,72 +2,56 @@
 #include <vector>
 using namespace std; 
 
+void rgbTOhsv(double (&col)[3]){//Wonky syntax...
+	double r = col[0];
+	double g = col[1];
+	double b = col[2];
+	
+	double cmax = max(r, max(g, b));
+	double cmin = min(r, min(g, b));
+	double delta = cmax - cmin;
+	
+	double val = cmax;
+	
+	double sat = 0.0;
+	if(cmax != 0.0){
+		sat = delta / cmax;
+	}
+	
+	double hue = 0.0;
+	if(delta != 0.0){
+		if(cmax == r){
+			hue = fmod(((g - b) / delta), 6.0) / 6.0;
+		}
+		else if(cmax == g){
+			hue = (((b - r) / delta) + 2.0) / 6.0;
+		}
+		else if(cmax == b){
+			hue = (((r - g) / delta) + 4.0) / 6.0;
+		}
+	}
+	
+	col[0] = hue;
+	col[1] = sat;
+	col[2] = val;
+}
+
 void findBlocks(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_pcl_cloud,
-                double ht_ofTable, double ht_ofBlock, block_color ColorSelected ,
+                double ht_ofTable, double ht_ofBlock, const float selectColor[3],
                 vector<int> &output_indices)
 {
     int size = in_pcl_cloud->width * in_pcl_cloud->height;
     output_indices.clear();
-    const float* selectColor = PERFECT_COLORS[ColorSelected];
 	
-    for (size_t i = 0; i < size; ++i)
+    for (size_t i = 0; i != size; ++i)
     {
-        // Assuming ht of block is no more than 10 cm
-        if(fabs(ht_ofTable - in_pcl_cloud->points[i].z) < .10)
-        {
-            float Z = in_pcl_cloud->points[i].z;
-            float C1 = selectColor[0];
-            float C2 = selectColor[1];
-            float C3 = selectColor[2];
-            float R = in_pcl_cloud->points[i].r;
-            float G = in_pcl_cloud->points[i].g;
-            float B = in_pcl_cloud->points[i].b;
-            ROS_INFO("Point Z = %f, RGBPt= %f,%f,%f  SelPt=%f,%f,%f", Z,R,G,B,C1,C2,C3);
-
-	    if ( fabs((ht_ofTable  + ht_ofBlock) - in_pcl_cloud->points[i].z ) < .01 )
-	    {
-                  switch (ColorSelected)
-                  {
-                     case BLOCK_RED : 
-                          if ((fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 70) &&
-                              (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 150)&&
-                              (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 150))
-                          {
-                             output_indices.push_back(i);
-                          }
-                          break;
-
-                     case BLOCK_GREEN : 
-                          if ( (fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 170)&&
-                               (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 60)&&
-                               (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 170))
-                          {
-                              output_indices.push_back(i);
-                          }
-                          break;
-
-                     case BLOCK_BLUE : 
-                          if ( (fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 170)&&
-                               (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 170)&&
-                               (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 60))
-                          {
-                              output_indices.push_back(i);
-                          }
-                          break;
-
-                    case BLOCK_WHITE : 
-                          if ( (fabs(in_pcl_cloud->points[i].r - selectColor[0] ) < 60)&&
-                               (fabs(in_pcl_cloud->points[i].g - selectColor[1] ) < 60)&&
-                               (fabs(in_pcl_cloud->points[i].b - selectColor[2] ) < 60))
-                          {
-                              output_indices.push_back(i);
-                          }
-                          break;
-                  }
-	    }
-        }
+	if ( fabs((ht_ofTable /*This is -ve*/ + ht_ofBlock) - in_pcl_cloud->points[i].z /* This is -ve*/ ) < .01 )
+	{
+	   output_indices.push_back(i);
+	}
     }
 }
+
 
 
 Eigen::Vector3f computeCentroid(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud,
@@ -106,30 +90,46 @@ void normalizeColors(pcl::PointCloud<pcl::PointXYZRGB>::Ptr subject_cloud,
 	}
 }
 
-
-block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros::NodeHandle n)
-{
-	//I would recommend prforming blockfinding AFTER we have already checked for a hand stopsignal or other Very High Points.
-	//You will be checking for errors in there first,
-	//so IN THEORY we shouldn't have to worry about them causing false positives here.
-	//However, I may come back and implement that functionality here as well.
-	//Also, since it is very much a point-cloud-related problem, feel free to email/text/whatever
-	//me if you want me to do the outlier checking or anything else for the HMI.
+block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros::NodeHandle n){
 	
 	vector<int> my_indices;
-        block_color foundBlockColor = BLOCK_CONFUSED;
 	ros::Publisher xdisplay_pub = n.advertise<sensor_msgs::Image>("/robot/xdisplay", 1000);
-        for ( int ii =BLOCK_RED; ii < BLOCK_CONFUSED; ii++)
-        {  
-	    findBlocks(inputCloud, -0.17377718 /* Ht of Table */, .03 /* Ht of Block */, (block_color)ii , my_indices);
-            if(my_indices.size() > 0)
-            {
-                foundBlockColor = (block_color)ii;
-                break;
-            } 
-        } 
-	int npts1 = my_indices.size();
-	ROS_INFO("Number of Points %d, LOCATED BLOCK(s) OF HEIGHT .02.",npts1);	
+	
+	int npts = inputCloud->width * inputCloud->height;
+
+	int n_block_points = 0;
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr chosen_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+
+	for(int i = 0 ; i < npts; i++){
+		pcl::PointXYZRGB p = inputCloud->points[i];
+		if(AOI_X_MIN < p.x && p.x < AOI_X_MAX){
+			if(AOI_Y_MIN < p.y && p.y < AOI_Y_MAX){
+				if(AOI_Z_MIN < p.z && p.z < AOI_Z_MAX){
+					if(true){//TODO: Disregardment of stool points will go here!
+						chosen_cloud->push_back(p);
+						n_block_points++;
+					}
+				}
+			}
+		}
+	}
+
+
+	sensor_msgs::PointCloud2::Ptr g_pcl2_display_cloud (new sensor_msgs::PointCloud2);//Output for points of appropriate height.
+	ros::Publisher pubCloud = n.advertise<sensor_msgs::PointCloud2> ("/pcl_cloud_display", 1);
+
+	chosen_cloud->header.frame_id = "base"; //base"; //vs /base_link?
+	chosen_cloud->is_dense = true;
+	chosen_cloud->width = n_block_points;
+	chosen_cloud->height = 1;
+
+	pcl::toROSMsg(*chosen_cloud,*g_pcl2_display_cloud);
+	g_pcl2_display_cloud->header.stamp = ros::Time::now(); //update the time stamp, so rviz does not complain
+	pubCloud.publish(g_pcl2_display_cloud);
+	
+	//findBlocks(inputCloud, 0.511359 /* Ht of Table */, .02 /* Ht of Block */, PERFECT_RED , my_indices);
+    /*int npts1 = my_indices.size();	
+	ROS_INFO("Number of Points %d, LOCATED BLOCK(s) OF HEIGHT .075.",npts1);	
 	Eigen::Vector3f center = computeCentroid(inputCloud, my_indices );
 	//normalizeColors(inputCloud, indices);
 	//for(int i = 0; i < npts; i++){
@@ -229,9 +229,47 @@ block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros
 		out.color_avg = avg_col;
 		out.major_axis = maxis;
 		out.top_plane_z = center[2];
-		out.color_name = foundBlockColor;//probable_col;
+		out.color_name = probable_col;
 	
-	return out;
+	return out;*/
+	block_data b;
+	return b;
 }
 
+block_color singlepoint_id_color(double pointcols[3]){
+	block_color retcol = BLOCK_CONFUSED;
+	double test_dist = CONFUSION_TOLERANCE;
+	double test_hsv[3] = {pointcols[0], pointcols[1], pointcols[2]};
+	rgbTOhsv(test_hsv);
+	
+	for(int i = 0; i < BLOCK_CONFUSED; i++){
+		double color_under_test[3] = {PERFECT_COLORS[i][0], PERFECT_COLORS[i][1], PERFECT_COLORS[i][2]};
+		rgbTOhsv(color_under_test);
+		double cdist = sqrt(pow(acos(sin(color_under_test[0]) * sin(test_hsv[0])), 2) + pow(color_under_test[1] - test_hsv[1], 2) + pow(color_under_test[2] - test_hsv[2], 2));
+		if(cdist < test_dist){
+			test_dist = cdist;
+			retcol = (block_color)i;
+		}
+	}
+	return retcol;
+}
 
+block_color multipoint_id_color(vector<pcl::PointXYZRGB> points){
+	double r_sum = 0.0;
+	double g_sum = 0.0;
+	double b_sum = 0.0;
+	
+	for(int i = 0; i < points.size(); i++){
+		r_sum = r_sum + points[i].r;
+		g_sum = g_sum + points[i].g;
+		b_sum = b_sum + points[i].b;
+	}
+	
+	r_sum = r_sum / points.size();
+	g_sum = g_sum / points.size();
+	b_sum = b_sum / points.size();
+
+	double x[3] = {r_sum, g_sum, b_sum};
+	
+	return singlepoint_id_color(x);
+}
