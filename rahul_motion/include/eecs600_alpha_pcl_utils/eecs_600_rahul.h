@@ -12,6 +12,7 @@ const int MOVE_BLOCK=5;
 const int DROP_BLOCK = 6;
 const int GOTO_PREPOSE_FINAL = 7;
 const int GOTO_IDLE_WAIT = 8;
+const int IAM_DONE_HERE = 9;
 
 
 #endif  

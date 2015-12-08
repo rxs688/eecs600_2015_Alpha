@@ -20,22 +20,27 @@ int g_count =0;
 void HandDetectioncb(const std_msgs::Bool& result)
 {
   ROS_INFO("HandDetectioncb: server responded " );
-  if (result.data !=  hand_state_saved) 
+  if ((result.data !=  hand_state_saved) && 
+     (g_my_states != GOTO_CENTROID) &&
+     (g_my_states != PICKUP_BLOCK)&&
+     (g_my_states != DROP_BLOCK) &&
+     (g_my_states != GOTO_PREPOSE_FINAL))
   {
+      hand_state_saved = result.data;
       if (result.data) // hand is there
       {
-         g_my_prevState = g_my_states;
-         g_my_states = GOTO_IDLE_WAIT;
+         //g_my_prevState = g_my_states;
+         //g_my_states = GOTO_IDLE_WAIT;
          system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_hold.png");
          ROS_INFO("Hand detection triggered.");
       }
       else 
       {
-          g_my_states = g_my_prevState;
-          g_my_prevState = g_my_states;
+          //g_my_states = g_my_prevState;
+          //g_my_prevState = g_my_states;
           ROS_INFO("Hand is not detected.");
       }
-      hand_state_saved = result.data;
+      
   }
 
 }
@@ -218,15 +223,16 @@ int main(int argc, char** argv)
                 ROS_INFO ("Centroid : %f, %f, %f ",myBlockData.centroid[0], myBlockData.centroid[1], myBlockData.centroid[2]); 
                 ROS_INFO ("Gripper : %f, %f, %f ",yalePosition [0], yalePosition [1],yalePosition [2]);
                  //Adding Offsets
-                myBlockData.centroid[0] = myBlockData.centroid[0]+.0605;
-                myBlockData.centroid[1] = myBlockData.centroid[1]-.079;
+                /*myBlockData.centroid[0] = myBlockData.centroid[0]+.0605;
+                myBlockData.centroid[1] = myBlockData.centroid[1]-.079;*/
+                myBlockData.centroid[2] = myBlockData.centroid[2]+.10;
                 ROS_INFO ("Centroid_offsets : %f, %f, %f ",myBlockData.centroid[0], myBlockData.centroid[1], myBlockData.centroid[2]); 
                 //alter the tool pose:
                 // Be a little above the Centroid 
                  
                 rt_tool_pose.pose.position.x = myBlockData.centroid[0];//0.573503;
                 rt_tool_pose.pose.position.y = myBlockData.centroid[1];//-0.181500;
-                rt_tool_pose.pose.position.z = myBlockData.centroid[2]+.141; //-0.015773;
+                rt_tool_pose.pose.position.z = myBlockData.centroid[2]; //-0.015773;
                 // send move plan request:
                 rtn_val=arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
                 //send command to execute planned motion
@@ -241,69 +247,66 @@ int main(int argc, char** argv)
                close_grip.data = 1;
                gripper_cmd.publish(close_grip); 
                ros::Duration(2.1).sleep(); // sleep for half a second
-               if(myBlockData.color_name == BLOCK_RED)
-               {
-                   ROS_INFO("PICKUP_BLOCK RED ");
-                   //go down by dp value
-                   dp_displacement<< 0,.25,.25;
-               }
-               else if(myBlockData.color_name == BLOCK_GREEN)
-               {
-                   ROS_INFO("PICKUP_BLOCK GREEN ");
-                   dp_displacement<< .25,0,.25;
-               }
-               else if( myBlockData.color_name == BLOCK_BLUE)
-               {
-                   ROS_INFO("PICKUP_BLOCK BLUE ");
-                   dp_displacement<< .25,.25,.25;
-               }  
-               rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_dp_xyz(dp_displacement);
-               if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS)
-               { 
-                  //send command to execute planned motion
-                  rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-               }
-                //Open the Gripper
-               ROS_INFO("sending open command");
-               close_grip.data = 0;
-               gripper_cmd.publish(close_grip); 
-               ros::Duration(2.0).sleep(); // sleep for half a second
+               
                g_my_states = MOVE_BLOCK; 
                break;
             }
   
             case MOVE_BLOCK:
             {
-                 //go down by dp value
-               dp_displacement<< .5,0,-0.25;
-               rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_dp_xyz(dp_displacement);
-               if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS)
-               { 
-                  //send command to execute planned motion
-                  rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+               ROS_INFO("State : MOVE_BLOCK"); 
+                rtn_val = arm_motion_commander.rt_arm_request_tool_pose_wrt_torso();
+                rt_tool_pose = arm_motion_commander.get_rt_tool_pose_stamped();
+
+               if(myBlockData.color_name == BLOCK_RED)
+               {
+                   ROS_INFO("PICKUP_BLOCK RED ");
+                   rt_tool_pose.pose.position.x = rt_tool_pose.pose.position.x + .25;
+                   rt_tool_pose.pose.position.z = rt_tool_pose.pose.position.z + 0.25;
                }
+               else if(myBlockData.color_name == BLOCK_GREEN)
+               {
+                   ROS_INFO("PICKUP_BLOCK GREEN ");
+                   rt_tool_pose.pose.position.y = rt_tool_pose.pose.position.y- .25;
+                   rt_tool_pose.pose.position.z = rt_tool_pose.pose.position.z + 0.5;
+               }
+               else if( myBlockData.color_name == BLOCK_BLUE)
+               {
+                   ROS_INFO("PICKUP_BLOCK BLUE ");
+                   rt_tool_pose.pose.position.x = rt_tool_pose.pose.position.x + .25;
+                   rt_tool_pose.pose.position.y = rt_tool_pose.pose.position.y + .25;
+                   rt_tool_pose.pose.position.z = rt_tool_pose.pose.position.z + 0.25;
+               }  
+                rtn_val=arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
+                //send command to execute planned motion
+                rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
                  g_my_states = DROP_BLOCK; 
                  break;
              }
 
             case DROP_BLOCK:
              {
+                ROS_INFO("State : DROP_BLOCK"); 
                  // Open the Gripper
                  std_msgs::Bool close_grip;
                   close_grip.data = 0;
                   gripper_cmd.publish(close_grip); 
-                 ros::Duration(1.0).sleep(); // sleep for half a second
+                 ros::Duration(2.0).sleep(); // sleep for half a second
                  g_my_states = GOTO_PREPOSE_FINAL; 
                  break;
              }
 
             case GOTO_PREPOSE_FINAL:
+                 ROS_INFO("State :GOTO_PREPOSE_FINAL"); 
                  rtn_val=arm_motion_commander.plan_move_to_pre_pose();   
                  //send command to execute planned motion
                  rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+                 g_my_states = IAM_DONE_HERE; 
                  break;
+            case IAM_DONE_HERE:
 
             case GOTO_IDLE_WAIT:
+                ROS_INFO("State :GOTO_IDLE_WAIT"); 
                 // Wait here till hand is removed
                 break;
 
@@ -312,7 +315,7 @@ int main(int argc, char** argv)
         ros::spinOnce();
         
         // we are done here, exit the code
-        if(g_my_states == GOTO_PREPOSE_FINAL) break;
+        if(g_my_states == IAM_DONE_HERE) break;
     }
     ROS_INFO("my work here is done!");
 
