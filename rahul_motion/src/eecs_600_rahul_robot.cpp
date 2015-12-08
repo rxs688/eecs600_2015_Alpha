@@ -21,10 +21,10 @@ void HandDetectioncb(const std_msgs::Bool& result)
 {
   ROS_INFO("HandDetectioncb: server responded " );
   if ((result.data !=  hand_state_saved) && 
-     (g_my_states != GOTO_CENTROID) &&
-     (g_my_states != PICKUP_BLOCK)&&
-     (g_my_states != DROP_BLOCK) &&
-     (g_my_states != GOTO_PREPOSE_FINAL))
+     (g_my_states == GOTO_CENTROID) &&
+     (g_my_states == PICKUP_BLOCK)&&
+     (g_my_states == DROP_BLOCK) &&
+     (g_my_states == MOVE_BLOCK))
   {
       hand_state_saved = result.data;
       if (result.data) // hand is there
@@ -148,20 +148,6 @@ int main(int argc, char** argv)
                  ROS_INFO("got a kinect pointcloud");
                  cwru_pcl_utils.transform_kinect_cloud(A_kpc_wrt_torso);
 
-                 /*while (!cwru_pcl_utils.got_selected_points())
-                 {
-                     ROS_INFO("did not receive pointcloud");
-                    ros::spinOnce();
-                    ros::Duration(1.0).sleep();
-                 }
-
-                 cwru_pcl_utils.transform_selected_points_cloud(A_kpc_wrt_torso);
-                 cwru_pcl_utils.reset_got_selected_points();
-                 cwru_pcl_utils.fit_xformed_selected_pts_to_plane(plane_normal, plane_dist);
-                 slectedCentroid = cwru_pcl_utils.get_centroid();
-                 ROS_INFO ("Centroid : %f, %f, %f ",slectedCentroid[0], slectedCentroid[1], slectedCentroid[2]);  
-                 //cwru_pcl_utils.save_kinect_snapshot();     not needed for now
-                 //cwru_pcl_utils.save_kinect_clr_snapshot(); not needed for now */
                  cwru_pcl_utils.save_transformed_kinect_snapshot();
                  g_my_states = COMPUTE_CENTROID;
                  break;

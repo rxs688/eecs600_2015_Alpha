@@ -20,25 +20,23 @@
 #define PCL_BLOCKFIND_H_
 
 enum block_color{
-	BLOCK_RED,
+	BLOCK_RED = 0,
 	BLOCK_GREEN,
 	BLOCK_BLUE,
 	BLOCK_WHITE,
 	BLOCK_WOOD,
 	BLOCK_BLACK,
-	BLOCK_STOOL,
 	BLOCK_CONFUSED
 };
 
-const float PERFECT_RED[3] =	{1.0, 0.0, 0.0};
-const float PERFECT_GREEN[3] =	{0.0, 1.0, 0.0};
-const float PERFECT_BLUE[3] =	{0.0, 0.0, 1.0};
-const float PERFECT_WHITE[3] =	{1.0, 1.0, 1.0};
+const float PERFECT_RED[3] =	{255, 0.0, 0.0};
+const float PERFECT_GREEN[3] =	{0.0, 255, 0.0};
+const float PERFECT_BLUE[3] =	{0.0, 0.0, 255};
+const float PERFECT_WHITE[3] =	{255, 255, 255};
 const float PERFECT_WOOD[3] =	{1.0, 1.0, 0.0};
 const float PERFECT_BLACK[3] =	{0.0, 0.0, 0.0};
-const float PERFECT_STOOL[3] =	{0.52, 0.47, 0.411};
 
-const float PERFECT_COLORS[7][3] = {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {1.0, 1.0, 0.0}, {0.0, 0.0, 0.0}, {0.52, 0.47, 0.411}};
+const float PERFECT_COLORS[6][3] = {{255, 0.0, 0.0}, {0.0, 255, 0.0}, {0.0, 0.0, 255}, {255, 255, 255}, {1.0, 1.0, 0.0}, {0.0, 0.0, 0.0}};
 
 ros::Publisher xdisplay_pub;
 sensor_msgs::ImagePtr baxter_red, baxter_yellow, baxter_blue;
@@ -64,21 +62,12 @@ const double CONFUSION_TOLERANCE = 0.5;//Will need to be experimentally tuned.
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
 
-const double AOI_X_MIN = 0.4;
-const double AOI_X_MAX = 1.0;
-const double AOI_Y_MIN = -0.30;
-const double AOI_Y_MAX = 0.30;
-const double AOI_Z_MIN = 0.40;
-const double AOI_Z_MAX = 0.60;
-
+//const double AOI_X = 0.7;
 //const double AOI_Y = 0.0;
 //const double AOI_Z = 
 
 
 
 block_data find_the_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud, ros::NodeHandle n);
-
-block_color singlepoint_id_color(double pointcols[3]);
-block_color multipoint_id_color(std::vector<pcl::PointXYZRGB> points);
 
 #endif

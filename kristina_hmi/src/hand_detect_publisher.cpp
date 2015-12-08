@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 
 ros::NodeHandle n; // two lines to create a publisher object that can talk to ROS
     CwruPclUtils cwru_pcl_utils(&n); //Subscribe to Kinect cloud
-    double hand_height;
+    double hand_height, htOfTable;
 
     tf::StampedTransform tf_kpc_to_torso_frame; //transform sensor frame to torso frame
     tf::TransformListener tf_listener;          //start a transform listener
@@ -43,9 +43,7 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
     Eigen::Affine3f A_kpc_wrt_torso = cwru_pcl_utils.transformTFToEigen(tf_kpc_to_torso_frame);
     ros::Publisher my_publisher_object = n.advertise<std_msgs::Bool>("hand_detected", 1);
     std_msgs::Bool hand_detected; //create a variable  
-    // as defined in: /opt/ros/indigo/share/std_msgs
-    // any message published on a ROS topic must have a pre-defined format, 
-    // so subscribers know how to interpret the serialized data transmission
+   
    
    ros::Rate naptime(50.0); //create a ros object from the ros “Rate” class; 
    //set the sleep timer for 100Hz repetition rate (arg is in units of Hz)
@@ -53,8 +51,9 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
     hand_detected.data = false;
     //Based on the minimal_publisher node provided. 
 
-    hand_height=.25; //TODO: Set value for height at which hand is considered detected. 
-
+    //TODO: Set value for height at which hand is considered detected. 
+    htOfTable = -0.12;
+    hand_height= htOfTable + 0.12; 
     while (ros::ok())
     {
 		while (!cwru_pcl_utils.got_kinect_cloud())
@@ -74,20 +73,19 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
 		cwru_pcl_utils.get_transformed_kinect_points(transformed_kinect_points); //Point cloud
 		// this loop has no sleep timer, and thus it will consume excessive CPU time
                 // expect one core to be 100% dedicated (wastefully) to this small task
-		float max_z = -DBL_MAX;
 		int npts = transformed_kinect_points.width * transformed_kinect_points.height;
-		pcl::PointXYZ seedpoint;
 		int bcount = 0;
+                 
       
 		for(int i = 0; i < npts; i++)
                 {
-			if(transformed_kinect_points.points[i].z > hand_height)
+			if((transformed_kinect_points.points[i].z - hand_height) < 0.10)
                         {
           				point_count++;
                         }		
           	}
 		//ROS_INFO("%i points at hand height detected.", point_count);
-                if(point_count>1500)
+                if(point_count>100)
                 { // will set number based on RVIZ output  
                    hand_detected.data=true;
                    //ROS_INFO("SELECTED POINT %f", seedpoint.z);
