@@ -53,7 +53,7 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
 
     //TODO: Set value for height at which hand is considered detected. 
     htOfTable = -0.12;
-    hand_height= htOfTable + 0.12; 
+    hand_height=  0.24; 
     while (ros::ok())
     {
 		while (!cwru_pcl_utils.got_kinect_cloud())
@@ -79,16 +79,18 @@ ros::NodeHandle n; // two lines to create a publisher object that can talk to RO
       
 		for(int i = 0; i < npts; i++)
                 {
-			if((transformed_kinect_points.points[i].z - hand_height) < 0.10)
+			if((transformed_kinect_points.points[i].z > hand_height)&&
+                           (fabs(transformed_kinect_points.points[i].x -0.50) < .06)&&
+                           (fabs(transformed_kinect_points.points[i].y - 0.05) < .1))
                         {
           				point_count++;
                         }		
           	}
 		//ROS_INFO("%i points at hand height detected.", point_count);
-                if(point_count>100)
+                if(point_count>2000)
                 { // will set number based on RVIZ output  
                    hand_detected.data=true;
-                   //ROS_INFO("SELECTED POINT %f", seedpoint.z);
+                   ROS_INFO("SELECTED POINT %d", point_count);
                 }
                 else
                 {

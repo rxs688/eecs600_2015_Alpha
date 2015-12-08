@@ -21,23 +21,24 @@ void HandDetectioncb(const std_msgs::Bool& result)
 {
   ROS_INFO("HandDetectioncb: server responded " );
   if ((result.data !=  hand_state_saved) && 
-     (g_my_states == GOTO_CENTROID) &&
-     (g_my_states == PICKUP_BLOCK)&&
-     (g_my_states == DROP_BLOCK) &&
-     (g_my_states == MOVE_BLOCK))
+     ((g_my_states == GOTO_CENTROID) ||
+     (g_my_states == PICKUP_BLOCK)||
+     (g_my_states == DROP_BLOCK) ||
+     (g_my_states == MOVE_BLOCK)||
+     (g_my_states == GOTO_IDLE_WAIT)))
   {
       hand_state_saved = result.data;
       if (result.data) // hand is there
       {
-         //g_my_prevState = g_my_states;
-         //g_my_states = GOTO_IDLE_WAIT;
+         g_my_prevState = g_my_states;
+         g_my_states = GOTO_IDLE_WAIT;
          system("rosrun baxter_examples xdisplay_image.py --file=`rospack find kristina_hmi`/share/images/baxter_hold.png");
-         ROS_INFO("Hand detection triggered.");
+         ROS_INFO("Hand detected.");
       }
       else 
       {
-          //g_my_states = g_my_prevState;
-          //g_my_prevState = g_my_states;
+          g_my_states = g_my_prevState;
+          g_my_prevState = g_my_states;
           ROS_INFO("Hand is not detected.");
       }
       
@@ -221,7 +222,7 @@ int main(int argc, char** argv)
                 rt_tool_pose.pose.position.z = myBlockData.centroid[2]; //-0.015773;
 				rt_tool_pose.pose.orientation.x = 0;
 				rt_tool_pose.pose.orientation.y = 1;
-				rt_tool_pose.pose.orientation.y = 0;
+				rt_tool_pose.pose.orientation.z = 0;
 				rt_tool_pose.pose.orientation.w = 0;
 				rt_tool_pose.header.frame_id = "yale_gripper_frame";
 				
@@ -229,6 +230,7 @@ int main(int argc, char** argv)
                 rtn_val=arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
                 //send command to execute planned motion
                 rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+                ros::Duration(1).sleep(); // sleep for half a second
                 g_my_states = PICKUP_BLOCK;
                 break;
             }
@@ -253,8 +255,9 @@ int main(int argc, char** argv)
                if(myBlockData.color_name == BLOCK_RED)
                {
                    ROS_INFO("PICKUP_BLOCK RED ");
-                   rt_tool_pose.pose.position.x = rt_tool_pose.pose.position.x + .25;
-                   rt_tool_pose.pose.position.z = rt_tool_pose.pose.position.z + 0.25;
+                   rt_tool_pose.pose.position.x = 0.564634203911;
+                   rt_tool_pose.pose.position.y = 0.564634203911;
+                   rt_tool_pose.pose.position.z = 0.0992839336395;
                }
                else if(myBlockData.color_name == BLOCK_GREEN)
                {
@@ -265,13 +268,14 @@ int main(int argc, char** argv)
                else if( myBlockData.color_name == BLOCK_BLUE)
                {
                    ROS_INFO("PICKUP_BLOCK BLUE ");
-                   rt_tool_pose.pose.position.x = rt_tool_pose.pose.position.x + .25;
-                   rt_tool_pose.pose.position.y = rt_tool_pose.pose.position.y + .25;
-                   rt_tool_pose.pose.position.z = rt_tool_pose.pose.position.z + 0.35;
+                   rt_tool_pose.pose.position.x = 0.531737089157;
+                   rt_tool_pose.pose.position.y = -0.284992277622;
+                   rt_tool_pose.pose.position.z =  0.15641450882;
                }  
                 rtn_val=arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
                 //send command to execute planned motion
                 rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+                ros::Duration(1).sleep(); // sleep for half a second
                  g_my_states = DROP_BLOCK; 
                  break;
              }
@@ -296,9 +300,12 @@ int main(int argc, char** argv)
                  g_my_states = IAM_DONE_HERE; 
                  break;
             case IAM_DONE_HERE:
+                 break;
 
             case GOTO_IDLE_WAIT:
-                ROS_INFO("State :GOTO_IDLE_WAIT"); 
+                ROS_INFO("State :GOTO_IDLE_WAIT");
+                ros::Duration(0.25).sleep(); 
+                ros::spinOnce();
                 // Wait here till hand is removed
                 break;
 
