@@ -219,6 +219,12 @@ int main(int argc, char** argv)
                 rt_tool_pose.pose.position.x = myBlockData.centroid[0];//0.573503;
                 rt_tool_pose.pose.position.y = myBlockData.centroid[1];//-0.181500;
                 rt_tool_pose.pose.position.z = myBlockData.centroid[2]; //-0.015773;
+				rt_tool_pose.pose.orientation.x = 0;
+				rt_tool_pose.pose.orientation.y = 1;
+				rt_tool_pose.pose.orientation.y = 0;
+				rt_tool_pose.pose.orientation.w = 0;
+				rt_tool_pose.header.frame_id = "yale_gripper_frame";
+				
                 // send move plan request:
                 rtn_val=arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
                 //send command to execute planned motion
@@ -261,7 +267,7 @@ int main(int argc, char** argv)
                    ROS_INFO("PICKUP_BLOCK BLUE ");
                    rt_tool_pose.pose.position.x = rt_tool_pose.pose.position.x + .25;
                    rt_tool_pose.pose.position.y = rt_tool_pose.pose.position.y + .25;
-                   rt_tool_pose.pose.position.z = rt_tool_pose.pose.position.z + 0.25;
+                   rt_tool_pose.pose.position.z = rt_tool_pose.pose.position.z + 0.35;
                }  
                 rtn_val=arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
                 //send command to execute planned motion
